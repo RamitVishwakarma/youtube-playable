@@ -31,7 +31,7 @@
   // Every 25 levels doubles a station's speed.
   const speedMult = (lvl) => Math.pow(2, Math.floor(lvl / 25));
 
-  let save = { money: 0, earned: 0, st: {}, t: Date.now(), boostUntil: 0 };
+  let save = { money: 0, earned: 0, st: {}, t: Date.now(), boostUntil: 0, cooks: 0 };
   let dirty = false;
 
   // --- styles ---------------------------------------------------------------------
@@ -61,6 +61,18 @@
     .acts button.mgr { background:#6c5ce7; }
     .acts button:disabled { opacity:.4; cursor:default; }
     .boostbar { font:800 13px system-ui; }
+    .stn.cookable { cursor:pointer; }
+    .stn.idle .ic { box-shadow:0 0 0 3px #34d27b; animation: tyc-pulse 1.1s ease-in-out infinite; }
+    .stn .ic .tap { position:absolute; top:-8px; right:-8px; font:900 11px system-ui; color:#fff; background:#34d27b;
+      border-radius:999px; padding:2px 7px; box-shadow:0 2px 0 #1fae5f; display:none; }
+    .stn.idle .ic .tap { display:block; }
+    @keyframes tyc-pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
+    .tyc-hint { width:min(560px,100%); text-align:center; font:900 17px system-ui,sans-serif; color:#fff;
+      text-shadow:0 2px 0 rgba(0,0,0,.25); margin-top:10px; animation: tyc-bob 1s ease-in-out infinite; }
+    @keyframes tyc-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(4px); } }
+    .tyc-float { position:fixed; font:900 18px system-ui; color:#1fae5f; text-shadow:0 2px 0 #fff; pointer-events:none;
+      animation: tyc-up .9s ease-out forwards; z-index:20; }
+    @keyframes tyc-up { from { opacity:1; transform:translate(-50%,0); } to { opacity:0; transform:translate(-50%,-46px); } }
   `;
   document.head.appendChild(css);
 
@@ -73,7 +85,9 @@
   const root = Kit.el('div', 'tyc');
   const street = Kit.el('div', 'street', '<div class="sign">🏮 Tiny Shop Street</div><div class="rate"></div>');
   const list = Kit.el('div', 'list');
+  const hint = Kit.el('div', 'tyc-hint', '👇 Tap the noodle cart to cook!');
   root.appendChild(street);
+  root.appendChild(hint);
   root.appendChild(list);
   document.getElementById('ui').appendChild(root);
 
@@ -99,14 +113,15 @@
     for (const s of STATIONS) {
       const row = Kit.el('div', 'stn');
       row.innerHTML =
-        '<button class="ic" type="button">' + s.icon + '<span class="lv"></span></button>' +
+        '<button class="ic" type="button" aria-label="Cook ' + s.name + '">' + s.icon + '<span class="lv"></span><span class="tap">TAP</span></button>' +
         '<div><h3>' + s.name + '</h3><div class="meta"></div><div class="bar"><i></i></div></div>' +
         '<div class="acts"><button class="buy" type="button"></button><button class="mgr" type="button"></button></div>';
       const r = {
         row, ic: row.querySelector('.ic'), lv: row.querySelector('.lv'), meta: row.querySelector('.meta'),
         bar: row.querySelector('.bar i'), buy: row.querySelector('.buy'), mgr: row.querySelector('.mgr'),
       };
-      r.ic.addEventListener('click', () => cook(s));
+      // the whole card cooks, except the buy / manager buttons
+      row.addEventListener('click', (e) => { if (!e.target.closest('.acts')) cook(s); });
       r.buy.addEventListener('click', () => buy(s));
       r.mgr.addEventListener('click', () => hire(s));
       rows[s.id] = r;
@@ -120,6 +135,7 @@
     m.running = true;
     m.prog = 0;
     sfx.tap();
+    if (save.cooks < 5) { save.cooks++; dirty = true; }
   }
   function buy(s) {
     const m = S(s.id);
@@ -162,6 +178,16 @@
     if (Math.random() < 0.5) spawnWalker();
   }
 
+  function floatCash(s, v) {
+    const r = rows[s.id] && rows[s.id].ic.getBoundingClientRect();
+    if (!r || !r.width) return;
+    const f = Kit.el('div', 'tyc-float', '+' + fmt(v));
+    f.style.left = r.left + r.width / 2 + 'px';
+    f.style.top = r.top - 6 + 'px';
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 900);
+  }
+
   const WALKERS = ['🧑', '👩', '👨‍🦱', '👧', '🧔', '👵', '🧑‍🎓', '👨‍🍳'];
   let walkers = 0;
   function spawnWalker() {
@@ -187,7 +213,9 @@
       if (m.prog >= 1) {
         // fast stations can finish several cycles per frame
         const cycles = m.mgr ? Math.floor(m.prog) : 1;
-        earn(profitOf(s) * cycles);
+        const got = profitOf(s) * cycles;
+        earn(got);
+        if (!m.mgr) floatCash(s, got);
         m.prog = m.mgr ? m.prog - cycles : 0;
         if (!m.mgr) m.running = false;
         if (ct > 0.8) Kit.audio.blip(880, 0.05, 'triangle', 0.05);
@@ -211,6 +239,8 @@
     const left = Math.ceil((save.boostUntil - Date.now()) / 1000);
     hud.set('boost', boosting ? '2× ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : '2× income');
     street.querySelector('.rate').textContent = boosting ? '🔥 2× BOOST' : 'Lifetime ' + fmt(save.earned);
+    // keep nudging new players until they've cooked a few orders
+    hint.style.display = save.cooks < 5 && !Object.values(save.st).some((m) => m.mgr) ? '' : 'none';
     let shownLocked = false;
     for (const s of STATIONS) {
       const m = S(s.id);
@@ -220,10 +250,12 @@
       r.row.style.display = '';
       if (locked) shownLocked = true;
       r.row.classList.toggle('locked', locked);
+      r.row.classList.toggle('cookable', !locked && !m.mgr);
+      r.row.classList.toggle('idle', !locked && !m.mgr && !m.running);
       r.lv.textContent = locked ? '🔒' : 'Lv ' + m.lvl;
       r.meta.textContent = locked
         ? 'Unlock to earn ' + fmt(s.profit) + ' per order'
-        : fmt(profitOf(s)) + ' / order · ' + cycleTime(s).toFixed(1) + 's' + (m.mgr ? ' · auto' : ' · tap icon');
+        : fmt(profitOf(s)) + ' / order · ' + cycleTime(s).toFixed(1) + 's' + (m.mgr ? ' · auto' : m.running ? ' · cooking…' : ' · tap to cook');
       r.bar.style.width = (m.running ? Math.min(1, m.prog) * 100 : 0) + '%';
       const price = locked ? s.unlock : upCost(s, m.lvl);
       r.buy.textContent = (locked ? 'Open ' : 'Upgrade ') + fmt(price);
@@ -255,6 +287,13 @@
     for (const s of STATIONS) { const m = S(s.id); if (!m.mgr) { m.running = false; m.prog = 0; } }
     if (S('noodle').lvl === 0) S('noodle').lvl = 1;
     buildList();
+    if (!save.earned) {
+      Kit.panel({
+        title: 'Tiny Shop Tycoon 🍜',
+        body: '<p>Tap your <b>Noodle Cart</b> to cook and earn cash.</p><p>Spend it on upgrades, open new stalls, and hire managers so they cook for you, even while you\u2019re away.</p>',
+        buttons: [{ label: "Let's cook!", cls: 'primary', onClick: () => {} }],
+      });
+    }
     offlineEarnings();
     Kit.loop(update, render);
     YT.onPause(() => { save.t = Date.now(); YT.save(save); });
