@@ -10,6 +10,7 @@ The website is a Next.js app. The flagship games are full 3D (three.js, bundled 
 | 🏎️ [Turbo Racer 3D](public/games/turbo-racer) **(3D flagship)** | Arcade racer vs 5 AI rivals (three.js) | Claim ×3 coins, Champion paint |
 | 🌀 [Helix Drop 3D](public/games/helix-drop) **(3D flagship)** | Helix tower drop with fireball combos (three.js) | Second chance, claim ×3 coins, Prism ball |
 | 🐍 [Serpent Smash 3D](public/games/serpent-smash) **(3D flagship)** | Snake arena: grow, swallow, beat the boss (three.js) | Revive, claim ×3 coins, Prism skin |
+| 🏗️ [Stack Tower 3D](public/games/stack-tower) **(3D flagship)** | One-tap stacker with slicing and perfect chains (three.js) | Continue, double coins, block colours |
 | 🧱 [Block Burst](public/games/block-burst) **(flagship)** | 8×8 block puzzle | Second chance |
 | 🐶 [Draw to Save](public/games/draw-to-save) | Physics puzzle | +50% ink, skip level |
 | 🔩 [Bolt Sort](public/games/bolt-sort) | Sort puzzle (solver-verified levels) | Extra bolt |
