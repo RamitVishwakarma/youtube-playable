@@ -909,7 +909,8 @@ function update(dt) {
     for (const e of L.events) {
       if (e.type === 'crystals') {
         e.items.forEach((it, k) => {
-          const s = it.got ? Math.max(0, (it.s || 1) - dt * 8) : 1;
+          // collected crystals shrink and rise once, then stay hidden (s stays 0)
+          const s = it.got ? Math.max(0, (it.s ?? 1) - dt * 8) : 1;
           it.s = s;
           tmpE.set(0, time * 2 + k, 0);
           tmpQ.setFromEuler(tmpE);

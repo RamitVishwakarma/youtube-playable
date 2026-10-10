@@ -74,7 +74,7 @@
     const world = buildWorld();
     R = {
       phase: 'aim', world, doll: makeRagdoll(SW * 0.2, TOP - 46), dmg: 0, hits: 0, still: 0, t: 0,
-      cam: { x: -W / 2 + 120, y: TOP - 520 }, aim: null, floats: [], acc: 0,
+      cam: { x: -W / 2 + 120, y: TOP - 520 }, aim: null, floats: [], acc: 0, farX: 0, farT: 0,
     };
     hud.set('dmg', 0);
     hud.set('coins', save.coins);
@@ -128,12 +128,18 @@
       const nx = dx / d, ny = dy / d;
       p.x = b.x + nx * min;
       p.y = b.y + ny * min;
-      // bumpers kick hard
-      const kick = 900 * STEP;
-      p.px = p.x - nx * kick;
-      p.py = p.y - ny * kick;
-      if (b.flash <= 0) { addDamage(20, p.x, p.y, 1); sfx.pop(); }
-      b.flash = 0.3;
+      if (b.flash > 0) continue; // just pushed out; one kick per bounce
+      // Kick the whole doll up and on down the stairs. A purely radial kick
+      // could fire it into the step's riser, bounce it back onto the bumper
+      // and trap it there.
+      let kx = 0.55 + nx * 0.3, ky = -0.85 + Math.min(0, ny) * 0.15;
+      const kl = Math.hypot(kx, ky);
+      kx /= kl; ky /= kl;
+      const kick = 850 * STEP;
+      for (const q of R.doll.pts) { q.px = q.x - kx * kick; q.py = q.y - ky * kick; }
+      addDamage(20, p.x, p.y, 1);
+      sfx.pop();
+      b.flash = 0.35;
     }
   }
 
@@ -205,7 +211,10 @@
       // settle detection
       const sp = R.doll.pts.reduce((s, p) => s + Math.hypot(p.x - p.px, p.y - p.py), 0) / R.doll.pts.length / STEP;
       R.still = sp < 25 ? R.still + dt : 0;
-      if (R.still > 1.2 || R.t > 25) finish();
+      // watchdog: end the run if the doll stops making progress down the stairs
+      const hx = R.doll.pts[0].x;
+      if (hx > R.farX + 20) { R.farX = hx; R.farT = R.t; }
+      if (R.still > 1.2 || R.t - R.farT > 4 || R.t > 25) finish();
       hud.set('dmg', R.dmg);
     }
     const head = R.doll.pts[0];
@@ -370,6 +379,9 @@
     }
     st.end();
   }
+
+  // read-only hook for automated play-tests
+  window.__ragdoll = { info: () => (R ? { phase: R.phase, t: R.t, dmg: R.dmg, x: R.doll.pts[0].x, y: R.doll.pts[0].y, bumpers: R.world.bumpers.length } : null) };
 
   Kit.boot('ragdoll-tumble', (data) => {
     save = Object.assign(save, data);
