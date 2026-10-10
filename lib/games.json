@@ -57,6 +57,25 @@
       ]
     },
     {
+      "slug": "serpent-smash",
+      "title": "Serpent Smash 3D",
+      "icon": "🐍",
+      "genre": "3D arena",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Eat orbs, grow huge, swallow every smaller snake, then the boss.",
+      "how": "Drag anywhere to steer with the floating joystick. Eat orbs to grow. Touch a smaller snake to swallow it; touch a bigger one and you're eaten. Swallow the crowned boss to clear the arena.",
+      "rewarded": [
+        "Revive after being eaten",
+        "Claim ×3 coins",
+        "Unlock the Prism skin"
+      ],
+      "colors": [
+        "#8fd3ff",
+        "#7ed957"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
