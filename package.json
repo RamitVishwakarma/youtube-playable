@@ -1,0 +1,14 @@
+{
+  "name": "youtube-playable",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ten HTML5 games built for YouTube Playables, plus a portal website to play them.",
+  "scripts": {
+    "start": "npx --yes serve@14.2.6 .",
+    "test": "node tests/smoke.mjs",
+    "package": "node scripts/package.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
