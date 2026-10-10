@@ -31,15 +31,20 @@ for (const [dir, cmd] of [[SITE, 'npm run build'], [BUNDLES, 'npm run package']]
 }
 const { games } = JSON.parse(await readFile(join(ROOT, 'lib', 'games.json'), 'utf8'));
 
-// Static server that mimics "clean URL" hosts: /x.html redirects to /x and
-// drops the query; a folder without a trailing slash serves its index.html
-// without redirecting. /bundles/* serves the YouTube bundles.
+// Static server that mimics "clean URL" hosts such as Vercel and `serve`:
+// /x.html redirects to /x and drops the query; /dir/index.html is a 404
+// (Vercel serves it only as /dir/); a folder without a trailing slash serves
+// its index.html without redirecting. /bundles/* serves the YouTube bundles.
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://x');
     let p = normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
     let root = SITE;
     if (p.startsWith('bundles/')) { root = BUNDLES; p = p.slice('bundles/'.length); }
+    if (root === SITE && (p === 'index.html' || p.endsWith('/index.html'))) {
+      res.writeHead(404);
+      return res.end('not found');
+    }
     if (p.endsWith('.html') && !p.endsWith('index.html')) {
       res.writeHead(301, { location: '/' + p.slice(0, -5) });
       return res.end();
