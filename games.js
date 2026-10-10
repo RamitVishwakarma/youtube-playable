@@ -1,4 +1,5 @@
-{
+// Game catalog used by the portal, the smoke test and the packager.
+window.GAMES_CATALOG = {
   "games": [
     {
       "slug": "draw-to-save",
@@ -7,8 +8,14 @@
       "genre": "Physics puzzle",
       "tagline": "Draw one line to shield the dog from a bee swarm.",
       "how": "Draw a single line, then survive 5 seconds. Less ink = more stars.",
-      "rewarded": ["+50% ink", "Skip level"],
-      "colors": ["#7fd3ff", "#2bb673"]
+      "rewarded": [
+        "+50% ink",
+        "Skip level"
+      ],
+      "colors": [
+        "#7fd3ff",
+        "#2bb673"
+      ]
     },
     {
       "slug": "bolt-sort",
@@ -17,8 +24,13 @@
       "genre": "Sort puzzle",
       "tagline": "Stack coloured nuts so every bolt holds one colour.",
       "how": "Tap a bolt to lift its top nuts, tap another to drop them on a matching colour.",
-      "rewarded": ["Extra bolt"],
-      "colors": ["#2b2257", "#ff4d5e"]
+      "rewarded": [
+        "Extra bolt"
+      ],
+      "colors": [
+        "#2b2257",
+        "#ff4d5e"
+      ]
     },
     {
       "slug": "parking-jam",
@@ -27,8 +39,14 @@
       "genre": "Spatial puzzle",
       "tagline": "Clear the jammed lot. Cars only drive forward.",
       "how": "Tap a car to drive it out. Three bumps and you're out.",
-      "rewarded": ["Hint", "Continue"],
-      "colors": ["#454b5e", "#ffd23f"]
+      "rewarded": [
+        "Hint",
+        "Continue"
+      ],
+      "colors": [
+        "#454b5e",
+        "#ffd23f"
+      ]
     },
     {
       "slug": "brain-trick",
@@ -37,8 +55,14 @@
       "genre": "Trick riddles",
       "tagline": "Riddles where the answer breaks the rules.",
       "how": "Tap, drag, and think sideways. Some answers hide in the question.",
-      "rewarded": ["Hint", "Skip level"],
-      "colors": ["#5b2bb5", "#ff5a8a"]
+      "rewarded": [
+        "Hint",
+        "Skip level"
+      ],
+      "colors": [
+        "#5b2bb5",
+        "#ff5a8a"
+      ]
     },
     {
       "slug": "mega-ramp-crash",
@@ -47,8 +71,13 @@
       "genre": "Car physics",
       "tagline": "Launch off a mega ramp and smash crate towers.",
       "how": "Hold to accelerate and boost. Spend coins on engine, fuel and ramp.",
-      "rewarded": ["Double coins"],
-      "colors": ["#5fb8ff", "#e8384f"]
+      "rewarded": [
+        "Double coins"
+      ],
+      "colors": [
+        "#5fb8ff",
+        "#e8384f"
+      ]
     },
     {
       "slug": "ragdoll-tumble",
@@ -57,8 +86,13 @@
       "genre": "Ragdoll action",
       "tagline": "Shove a ragdoll down a giant staircase for damage points.",
       "how": "Drag to aim, release to push. Bumpers and spikes score big.",
-      "rewarded": ["Double coins"],
-      "colors": ["#3a2a6b", "#ff8a6b"]
+      "rewarded": [
+        "Double coins"
+      ],
+      "colors": [
+        "#3a2a6b",
+        "#ff8a6b"
+      ]
     },
     {
       "slug": "tiny-shop-tycoon",
@@ -67,8 +101,14 @@
       "genre": "Idle tycoon",
       "tagline": "Grow a noodle cart into a street-food empire.",
       "how": "Tap to cook, upgrade stations, hire managers who earn while you're away.",
-      "rewarded": ["2x income (5 min)", "Double offline earnings"],
-      "colors": ["#ffcf8a", "#e8607a"]
+      "rewarded": [
+        "2x income (5 min)",
+        "Double offline earnings"
+      ],
+      "colors": [
+        "#ffcf8a",
+        "#e8607a"
+      ]
     },
     {
       "slug": "makeover-showdown",
@@ -77,8 +117,14 @@
       "genre": "Fashion",
       "tagline": "Style a look for the theme and beat your rival on the runway.",
       "how": "Pick hair, top, bottom, shoes and an extra that match the theme tags.",
-      "rewarded": ["Unlock premium pieces", "Triple coins"],
-      "colors": ["#ffb3d9", "#7b2cbf"]
+      "rewarded": [
+        "Unlock premium pieces",
+        "Triple coins"
+      ],
+      "colors": [
+        "#ffb3d9",
+        "#7b2cbf"
+      ]
     },
     {
       "slug": "drop-merge",
@@ -87,8 +133,14 @@
       "genre": "Drop & merge",
       "tagline": "Drop planets, merge matching ones, and build the Sun.",
       "how": "Aim and release to drop. Don't let the jar overflow the red line.",
-      "rewarded": ["Clear small planets", "Second chance"],
-      "colors": ["#0d0f2b", "#5f7bff"]
+      "rewarded": [
+        "Clear small planets",
+        "Second chance"
+      ],
+      "colors": [
+        "#0d0f2b",
+        "#5f7bff"
+      ]
     },
     {
       "slug": "highway-dodge",
@@ -97,8 +149,15 @@
       "genre": "Arcade racing",
       "tagline": "Weave through traffic with one thumb.",
       "how": "Tap left or right to switch lanes. Near misses build your combo.",
-      "rewarded": ["Revive", "Double coins", "Unlock taxi"],
-      "colors": ["#2f3542", "#3d8bff"]
+      "rewarded": [
+        "Revive",
+        "Double coins",
+        "Unlock taxi"
+      ],
+      "colors": [
+        "#2f3542",
+        "#3d8bff"
+      ]
     }
   ]
-}
+};

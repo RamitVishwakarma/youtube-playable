@@ -3,6 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- site-only:start (scripts/package.mjs strips this from Playables bundles) -->
+  <script>
+    // Relative paths need the trailing slash: /games/x -> /games/x/
+    if (/^https?:$/.test(location.protocol) && !/(\/|\.html)$/.test(location.pathname)) {
+      location.replace(location.pathname + '/' + location.search + location.hash);
+    }
+  </script>
+  <!-- site-only:end -->
   <title>Bolt Sort</title>
   <!-- YouTube Playables SDK: must load before any game code -->
   <script src="https://www.youtube.com/game_api/v1"></script>

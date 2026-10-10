@@ -32,7 +32,7 @@ Open `/` for the portal, or go straight to a game, e.g. `/games/bolt-sort/`.
 ```
 index.html, play.html      portal website (game grid + player page)
 assets/                    portal styles and script
-games.json                 game catalog used by the portal and the tests
+games.js                   game catalog used by the portal, tests and packager
 games/<slug>/              one folder per game: index.html + game.js
 shared/yt.js               YouTube Playables SDK wrapper (+ browser fallbacks)
 shared/kit.js              canvas stage, game loop, input, audio, UI panels

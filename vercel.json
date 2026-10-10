@@ -4,6 +4,7 @@
   "installCommand": "echo 'static site: no install needed'",
   "buildCommand": "echo 'static site: no build needed'",
   "outputDirectory": ".",
+  "trailingSlash": true,
   "headers": [
     {
       "source": "/(.*)\\.(js|css)",

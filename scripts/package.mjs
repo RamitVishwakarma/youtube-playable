@@ -17,7 +17,14 @@ const OUT = join(ROOT, 'dist', 'playables');
 const SHARED = ['yt.js', 'kit.js', 'game.css'];
 const MiB = 1024 * 1024;
 
-const { games } = JSON.parse(await readFile(join(ROOT, 'games.json'), 'utf8'));
+// games.js is a browser script (window.GAMES_CATALOG = {...};) so the portal
+// also works from file://; pull the JSON object out of it.
+async function loadCatalog(root) {
+  const src = await readFile(join(root, 'games.js'), 'utf8');
+  return JSON.parse(src.slice(src.indexOf('{'), src.lastIndexOf('}') + 1));
+}
+
+const { games } = await loadCatalog(ROOT);
 await rm(OUT, { recursive: true, force: true });
 await mkdir(OUT, { recursive: true });
 
@@ -45,7 +52,10 @@ for (const g of games) {
   await mkdir(join(dst, 'shared'), { recursive: true });
   for (const f of await readdir(src)) {
     if (f === 'index.html') {
-      const html = (await readFile(join(src, f), 'utf8')).replaceAll('../../shared/', 'shared/');
+      const html = (await readFile(join(src, f), 'utf8'))
+        .replace(/[ \t]*<!-- site-only:start[\s\S]*?<!-- site-only:end -->\n?/, '')
+        .replaceAll('../../shared/', 'shared/');
+      if (html.includes('site-only') || !html.includes('game_api/v1')) throw new Error(g.slug + ': bad index.html after packaging');
       await writeFile(join(dst, f), html);
     } else {
       await copyFile(join(src, f), join(dst, f));
