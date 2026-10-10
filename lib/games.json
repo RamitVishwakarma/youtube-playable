@@ -1,6 +1,24 @@
 {
   "games": [
     {
+      "slug": "mini-mart",
+      "title": "Mini Mart Empire 3D",
+      "icon": "🏪",
+      "genre": "3D tycoon",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Stock shelves, serve customers, hire staff and buy new stores across town.",
+      "how": "Drag anywhere to walk. Grab stock from the crates out back, carry it to the matching shelf, then stand in the circle behind the register to serve the queue. Walk over the cash to pick it up. Stand on a price circle to spend there: new aisles, a cashier and stockers who work for you, bigger arms, faster shoes, and finally a NEW STORE. Stores with a cashier and a stocker keep earning while you're away. Open the 🗺️ map to travel between your stores.",
+      "rewarded": [
+        "2× cash for 3 minutes",
+        "Collect ×2 away earnings"
+      ],
+      "colors": [
+        "#ff5a5f",
+        "#3ddc97"
+      ]
+    },
+    {
       "slug": "grow-rush",
       "title": "Grow Rush 3D",
       "icon": "🏃",
