@@ -7,6 +7,7 @@ The website is a Next.js app. The flagship games are full 3D (three.js, bundled 
 | Game | Genre | Rewarded-ad hooks |
 |---|---|---|
 | 🏃 [Grow Rush 3D](public/games/grow-rush) **(3D flagship)** | Gate runner + boss duel (three.js) | Revive, claim ×3 coins, Hero skin |
+| 🏎️ [Turbo Racer 3D](public/games/turbo-racer) **(3D flagship)** | Arcade racer vs 5 AI rivals (three.js) | Claim ×3 coins, Champion paint |
 | 🧱 [Block Burst](public/games/block-burst) **(flagship)** | 8×8 block puzzle | Second chance |
 | 🐶 [Draw to Save](public/games/draw-to-save) | Physics puzzle | +50% ink, skip level |
 | 🔩 [Bolt Sort](public/games/bolt-sort) | Sort puzzle (solver-verified levels) | Extra bolt |

@@ -86,3 +86,33 @@ export const sfx = {
   fanfare: () => [0, 4, 7, 12, 7, 12, 16].forEach((s, i) => tone(semis(523, s), i * 0.09, 0.3, 'square', 0.06)),
   rise: (k) => tone(semis(330, Math.min(24, k)), 0, 0.12, 'triangle', 0.12),
 };
+
+/**
+ * A continuous voice (engine hum, wind). Returns { set(freq, vol), stop() }.
+ * Silent until audio is unlocked; follows suspend/resume with the context.
+ */
+export function loopVoice(type = 'sawtooth', cutoff = 900) {
+  let o = null, g = null, f = null;
+  function ensure() {
+    if (o || !ac) return;
+    o = ac.createOscillator();
+    g = ac.createGain();
+    f = ac.createBiquadFilter();
+    o.type = type;
+    f.type = 'lowpass';
+    f.frequency.value = cutoff;
+    g.gain.value = 0;
+    o.connect(f).connect(g).connect(out);
+    o.start();
+  }
+  return {
+    set(freq, vol) {
+      ensure();
+      if (!o) return;
+      const t = ac.currentTime;
+      o.frequency.setTargetAtTime(freq, t, 0.05);
+      g.gain.setTargetAtTime(on() ? vol : 0, t, 0.08);
+    },
+    stop() { if (g) g.gain.setTargetAtTime(0, ac.currentTime, 0.05); },
+  };
+}

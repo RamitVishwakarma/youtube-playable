@@ -240,3 +240,6 @@ export function countUp(elm, from, to, ms = 700) {
   };
   requestAnimationFrame(step);
 }
+
+/** The full-screen effects layer (created on first use). */
+export function fxLayer() { return fxRoot(); }
