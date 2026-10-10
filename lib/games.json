@@ -150,6 +150,25 @@
       ]
     },
     {
+      "slug": "knife-hit",
+      "title": "Knife Hit 3D",
+      "icon": "🔪",
+      "genre": "3D arcade",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Tap to throw. Stick every knife in the spinning log, never hit another blade.",
+      "how": "Tap to throw a knife into the spinning target. Land every knife to burst the log and move on, but hit a knife that's already stuck and the run ends. Slice the apples on the rim for coins. Every fifth stage is a boss target with a nastier spin.",
+      "rewarded": [
+        "Continue after a clash",
+        "Claim ×3 boss coins",
+        "Unlock the Candy knife"
+      ],
+      "colors": [
+        "#ff4d6d",
+        "#6b3fa0"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
