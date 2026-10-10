@@ -1,0 +1,160 @@
+/*
+ * Flagship UI kit: the shared look for the 3D games (title screen, HUD,
+ * panels, buttons, praise pops). DOM overlay on top of the WebGL canvas.
+ * Games theme it with --accent / --accent-2 on :root.
+ */
+:root {
+  --accent: #ff3d6e;
+  --accent-2: #ff9f1c;
+  --ink: #1b1440;
+  --panel-1: #3b2a9a;
+  --panel-2: #1d1d63;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+#scene { position: fixed; inset: 0; display: block; touch-action: none; }
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 20; overflow: hidden; }
+#ui { font-family: var(--font); }
+
+/* --- text styles -------------------------------------------------------- */
+.fs-stroke {
+  color: #fff;
+  font-weight: 900;
+  -webkit-text-stroke: 0.14em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 0.09em 0 rgba(0, 0, 0, .25);
+  letter-spacing: .01em;
+}
+.fs-gold { color: #ffe066; }
+
+/* --- buttons ------------------------------------------------------------ */
+.fs-btn {
+  --c1: #ff7a59; --c2: #ff3d6e; --c3: #b8164a;
+  appearance: none; border: 0; cursor: pointer; position: relative;
+  font: 900 20px/1 var(--font); color: #fff; letter-spacing: .02em;
+  padding: 16px 28px 18px; border-radius: 999px; min-width: 200px;
+  background: linear-gradient(180deg, var(--c1), var(--c2));
+  box-shadow: 0 6px 0 var(--c3), 0 12px 24px rgba(0, 0, 0, .28);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .22);
+  transition: transform .08s ease, box-shadow .08s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.fs-btn::after {
+  content: ""; position: absolute; left: 16%; right: 16%; top: 5px; height: 34%;
+  border-radius: 999px; background: rgba(255, 255, 255, .35); pointer-events: none;
+}
+.fs-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--c3), 0 6px 12px rgba(0, 0, 0, .25); }
+.fs-btn:disabled { filter: grayscale(.7) brightness(.8); cursor: default; }
+.fs-btn.green { --c1: #4ef0a0; --c2: #16c172; --c3: #0a7a47; }
+.fs-btn.gold { --c1: #ffe066; --c2: #ffb703; --c3: #a86b00; color: #5a3500; text-shadow: 0 1px 0 rgba(255, 255, 255, .4); }
+.fs-btn.blue { --c1: #6ec8ff; --c2: #2f80ff; --c3: #1749a8; }
+.fs-btn.ghost { --c1: rgba(255, 255, 255, .22); --c2: rgba(255, 255, 255, .12); --c3: rgba(0, 0, 0, .25); min-width: 140px; font-size: 17px; }
+.fs-btn.small { min-width: 0; padding: 11px 18px 13px; font-size: 16px; }
+.fs-btn .ad { display: inline-block; font-size: .7em; background: rgba(0, 0, 0, .22); border-radius: 6px; padding: 3px 6px; margin-right: 8px; vertical-align: 2px; }
+.fs-btn.pulse { animation: fs-pulse 1.4s ease-in-out infinite; }
+
+.fs-icon {
+  appearance: none; border: 0; cursor: pointer; width: 48px; height: 48px; border-radius: 16px;
+  background: rgba(20, 16, 60, .45); color: #fff; font: 800 20px/1 var(--font);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .18), 0 4px 12px rgba(0, 0, 0, .2);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.fs-icon:active { transform: scale(.92); }
+
+/* --- title screen ------------------------------------------------------- */
+.fs-title {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: space-between; padding: max(28px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(10, 8, 40, .25), rgba(10, 8, 40, 0) 35%, rgba(10, 8, 40, 0) 60%, rgba(10, 8, 40, .55));
+  animation: fs-fade .35s ease-out;
+}
+.fs-logo { text-align: center; margin-top: 4vh; animation: fs-drop .7s cubic-bezier(.2, 1.5, .4, 1); }
+.fs-logo .l1 { display: block; font-size: clamp(34px, min(13vw, 15vh), 92px); line-height: .95; }
+.fs-logo .l2 { display: block; font-size: clamp(24px, min(9vw, 10vh), 64px); line-height: 1; color: #ffe066; margin-top: 4px; }
+.fs-logo .tag { display: block; margin-top: 12px; font: 800 clamp(14px, 3.6vw, 18px)/1.2 var(--font); color: rgba(255, 255, 255, .9); text-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+.fs-title .fs-actions { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.fs-title .fs-best { font: 800 16px var(--font); color: #ffe066; text-shadow: 0 2px 4px rgba(0, 0, 0, .5); }
+.fs-title .fs-row { display: flex; gap: 12px; }
+.fs-tap { font: 900 15px var(--font); color: #fff; opacity: .85; letter-spacing: .12em; text-transform: uppercase; animation: fs-blink 1.2s ease-in-out infinite; text-shadow: 0 2px 4px rgba(0, 0, 0, .5); }
+
+/* --- HUD ---------------------------------------------------------------- */
+.fs-hud {
+  position: absolute; left: 0; right: 0; top: 0; display: grid; grid-template-columns: auto 1fr auto;
+  align-items: start; gap: 10px; padding: max(12px, env(safe-area-inset-top)) 12px 0; pointer-events: none !important;
+}
+.fs-hud > * { pointer-events: auto; }
+.fs-hud .mid { display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.fs-pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px 6px 8px; border-radius: 999px;
+  background: rgba(20, 16, 60, .5); color: #fff; font: 900 17px var(--font);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .16); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.fs-pill .ico { width: 24px; height: 24px; display: grid; place-items: center; font-size: 18px; }
+.fs-pill.bump { animation: fs-bump .25s ease-out; }
+.fs-level { font: 900 18px var(--font); }
+.fs-progress { width: min(240px, 52vw); height: 14px; border-radius: 999px; background: rgba(20, 16, 60, .5); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .18); overflow: hidden; }
+.fs-progress i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .15s linear; }
+.fs-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+/* --- panels ------------------------------------------------------------- */
+.fs-overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; padding: 16px;
+  background: rgba(6, 5, 28, .55); animation: fs-fade .25s ease-out; z-index: 10;
+}
+.fs-panel {
+  width: min(380px, 100%); max-height: calc(100% - 8px); overflow: auto; text-align: center; color: #fff;
+  background: linear-gradient(180deg, var(--panel-1), var(--panel-2)); border-radius: 28px; padding: 26px 20px 22px;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .16), 0 30px 60px rgba(0, 0, 0, .45);
+  animation: fs-pop .4s cubic-bezier(.2, 1.5, .4, 1);
+}
+.fs-panel h2 { margin: 0 0 8px; font-size: 36px; line-height: 1.05; }
+.fs-panel .sub { font: 700 15px/1.4 var(--font); opacity: .85; margin: 4px 0 10px; }
+.fs-panel .big { font: 900 54px/1 var(--font); margin: 10px 0 6px; }
+.fs-panel .reward { display: inline-flex; align-items: center; gap: 8px; font: 900 30px var(--font); color: #ffe066; margin: 6px 0 10px; }
+.fs-panel .btns { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 18px; }
+.fs-stars { font-size: 46px; letter-spacing: 6px; margin: 4px 0 8px; }
+.fs-stars span { display: inline-block; color: rgba(255, 255, 255, .18); }
+.fs-stars span.on { color: #ffd60a; animation: fs-star .5s cubic-bezier(.2, 1.6, .4, 1) both; text-shadow: 0 0 16px rgba(255, 214, 10, .6); }
+.fs-stars span:nth-child(2) { animation-delay: .15s; }
+.fs-stars span:nth-child(3) { animation-delay: .3s; }
+
+/* shop */
+.fs-shop { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.fs-item {
+  appearance: none; border: 0; cursor: pointer; border-radius: 18px; padding: 10px 6px 8px; color: #fff;
+  background: rgba(255, 255, 255, .1); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .12); font: 800 12px var(--font);
+}
+.fs-item .sw { width: 44px; height: 44px; border-radius: 14px; margin: 0 auto 6px; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .2), 0 3px 8px rgba(0, 0, 0, .25); }
+.fs-item.on { box-shadow: inset 0 0 0 3px #ffe066; background: rgba(255, 224, 102, .15); }
+.fs-item.locked .sw { filter: grayscale(.6) brightness(.7); }
+.fs-item .price { display: block; color: #ffe066; margin-top: 2px; }
+
+/* --- floating feedback -------------------------------------------------- */
+.fs-praise {
+  position: absolute; left: 50%; top: 32%; transform: translate(-50%, -50%); white-space: nowrap;
+  font-size: clamp(34px, 10vw, 64px); animation: fs-praise 1.1s cubic-bezier(.2, 1.4, .4, 1) forwards;
+}
+.fs-float { position: absolute; transform: translate(-50%, -50%); font-size: 26px; white-space: nowrap; animation: fs-float 0.9s ease-out forwards; }
+.fs-coin {
+  position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6b0, #ffd60a 45%, #e09b00 75%);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18), 0 2px 6px rgba(0, 0, 0, .3);
+}
+.fs-hand { position: absolute; font-size: 54px; transform: translate(-30%, -10%); filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .4)); pointer-events: none; }
+.fs-hint { position: absolute; left: 50%; bottom: 18%; transform: translateX(-50%); font-size: clamp(18px, 5vw, 26px); white-space: nowrap; pointer-events: none; animation: fs-blink 1.4s ease-in-out infinite; }
+.fs-vignette { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 120px rgba(255, 30, 60, .55); animation: fs-fadeout .5s ease-out forwards; }
+
+@keyframes fs-fade { from { opacity: 0; } }
+@keyframes fs-fadeout { to { opacity: 0; } }
+@keyframes fs-pop { from { transform: scale(.7); opacity: 0; } }
+@keyframes fs-drop { from { transform: translateY(-40px) scale(.8); opacity: 0; } }
+@keyframes fs-pulse { 50% { transform: scale(1.05); } }
+@keyframes fs-blink { 50% { opacity: .45; } }
+@keyframes fs-bump { 50% { transform: scale(1.18); } }
+@keyframes fs-star { from { transform: scale(0) rotate(-40deg); } }
+@keyframes fs-praise {
+  0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; }
+  25% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  70% { transform: translate(-50%, -60%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -80%) scale(.95); opacity: 0; }
+}
+@keyframes fs-float { to { transform: translate(-50%, -160%); opacity: 0; } }

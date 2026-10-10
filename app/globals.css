@@ -120,3 +120,9 @@ footer { color: var(--muted); font-size: 13px; padding: 0 0 30px; }
 
 .notfound { padding: 80px 16px; text-align: center; }
 .notfound a { color: var(--accent2); }
+
+.thumb .badge {
+  position: absolute; right: 10px; top: 10px; z-index: 1; font-size: 12px; font-weight: 900; letter-spacing: .04em;
+  padding: 4px 9px; border-radius: 999px; color: #1b1440; background: linear-gradient(180deg, #ffe066, #ffb703);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+}

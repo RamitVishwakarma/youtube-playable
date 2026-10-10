@@ -10,6 +10,8 @@ export type Game = {
   rewarded: string[];
   colors: [string, string];
   featured?: boolean;
+  /** Short corner badge on the portal card, e.g. "3D". */
+  badge?: string;
 };
 
 export const games = data.games as Game[];
