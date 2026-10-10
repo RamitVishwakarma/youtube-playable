@@ -95,6 +95,24 @@
       ]
     },
     {
+      "slug": "checkout-rush",
+      "title": "Checkout Rush 3D",
+      "icon": "🛒",
+      "genre": "3D simulation",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Run the till: scan the groceries, take the card or count the change, earn tips.",
+      "how": "Tap each item on the belt to scan it. Then take payment: tap the card reader, or count the exact change from the drawer and hand it over. Quick, correct service earns tips. Spend your coins on store upgrades between days.",
+      "rewarded": [
+        "Claim ×3 day earnings",
+        "Free store upgrade"
+      ],
+      "colors": [
+        "#3a86ff",
+        "#3ddc97"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
