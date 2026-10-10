@@ -131,6 +131,25 @@
       ]
     },
     {
+      "slug": "hoop-shot",
+      "title": "Hoop Shot 3D",
+      "icon": "🏀",
+      "genre": "3D sports",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Swipe to shoot, swish for bonus points, catch fire and beat the clock.",
+      "how": "Swipe up toward the hoop to shoot: the direction aims and the length sets the power. Score the target before the 40-second clock runs out. A swish is worth 3 and a rim-in 2. Make three in a row and you're ON FIRE for double points. From level 3 the hoop starts moving.",
+      "rewarded": [
+        "+15 seconds when time runs out",
+        "Claim ×3 coins",
+        "Unlock the Beach ball"
+      ],
+      "colors": [
+        "#ff7b00",
+        "#3a86ff"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
