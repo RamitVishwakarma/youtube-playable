@@ -9,6 +9,7 @@ export type Game = {
   how: string;
   rewarded: string[];
   colors: [string, string];
+  featured?: boolean;
 };
 
 export const games = data.games as Game[];
