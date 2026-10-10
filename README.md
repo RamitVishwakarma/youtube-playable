@@ -13,6 +13,7 @@ The website is a Next.js app. The flagship games are full 3D (three.js, bundled 
 | 🏗️ [Stack Tower 3D](public/games/stack-tower) **(3D flagship)** | One-tap stacker with slicing and perfect chains (three.js) | Continue, double coins, block colours |
 | 🛒 [Checkout Rush 3D](public/games/checkout-rush) **(3D flagship)** | Supermarket till sim: scan, take payment, count change (three.js) | Claim ×3, free upgrades |
 | 🚌 [Bus Rush 3D](public/games/bus-rush) **(3D flagship)** | Colour bus-sorting puzzle with solver-checked levels (three.js) | +2 benches, claim ×3 coins |
+| 🏀 [Hoop Shot 3D](public/games/hoop-shot) **(3D flagship)** | Swipe-to-shoot arcade basketball with rim physics (three.js) | +15 s, claim ×3, Beach ball |
 | 🧱 [Block Burst](public/games/block-burst) **(flagship)** | 8×8 block puzzle | Second chance |
 | 🐶 [Draw to Save](public/games/draw-to-save) | Physics puzzle | +50% ink, skip level |
 | 🔩 [Bolt Sort](public/games/bolt-sort) | Sort puzzle (solver-verified levels) | Extra bolt |
