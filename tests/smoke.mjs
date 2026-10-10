@@ -14,11 +14,32 @@ const shotsIdx = process.argv.indexOf('--shots');
 const SHOTS = shotsIdx > 0 ? process.argv[shotsIdx + 1] : null;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png' };
 
+// games.js is a browser script (window.GAMES_CATALOG = {...};) so the portal
+// also works from file://; pull the JSON object out of it.
+async function loadCatalog(root) {
+  const src = await readFile(join(root, 'games.js'), 'utf8');
+  return JSON.parse(src.slice(src.indexOf('{'), src.lastIndexOf('}') + 1));
+}
+
+// Behaves like common static hosts with "clean URLs" (e.g. `serve`, used by
+// `npm start`): /x.html redirects to /x and drops the query string, /x serves
+// x.html, and a folder without a trailing slash serves its index.html. Both
+// quirks have broken the site before, so the tests run against them.
 const server = createServer(async (req, res) => {
   try {
-    let p = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^([/\\])+/, '');
+    const url = new URL(req.url, 'http://x');
+    let p = normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
+    if (p.endsWith('.html') && !p.endsWith('index.html')) {
+      res.writeHead(301, { location: '/' + p.slice(0, -5) });
+      return res.end();
+    }
     if (p === '' || p.endsWith('/')) p += 'index.html';
-    const body = await readFile(join(ROOT, p));
+    let body;
+    try { body = await readFile(join(ROOT, p)); } catch {
+      try { body = await readFile(join(ROOT, p + '.html')); p += '.html'; } catch {
+        body = await readFile(join(ROOT, p, 'index.html')); p += '/index.html';
+      }
+    }
     res.writeHead(200, { 'content-type': TYPES[extname(p)] || 'application/octet-stream' });
     res.end(body);
   } catch {
@@ -29,7 +50,7 @@ const server = createServer(async (req, res) => {
 await new Promise((r) => server.listen(0, r));
 const base = 'http://127.0.0.1:' + server.address().port + '/';
 
-const catalog = JSON.parse(await readFile(join(ROOT, 'games.json'), 'utf8'));
+const catalog = await loadCatalog(ROOT);
 const browser = await chromium.launch();
 if (SHOTS) await mkdir(SHOTS, { recursive: true });
 let failed = 0;
@@ -74,17 +95,45 @@ for (const game of catalog.games) {
   }
 }
 
-// portal pages
-for (const path of ['', 'play.html?g=' + catalog.games[0].slug]) {
+// direct game links without the trailing slash must still boot
+for (const game of catalog.games) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
+  await page.route('https://www.youtube.com/**', (r) => r.abort());
+  await page.goto(base + 'games/' + game.slug);
+  await page.waitForFunction(() => window.YT && window.YT.status().ready, null, { timeout: 8000 }).catch(() => errors.push('gameReady never fired'));
+  if (errors.length) failed++;
+  console.log((errors.length ? 'FAIL' : 'ok').padEnd(5), game.slug.padEnd(20), 'no trailing slash', errors.join('; '));
+  await page.close();
+}
+
+// portal: every card must open its own game in the player page
+{
   const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.route('https://www.youtube.com/**', (r) => r.abort());
-  await page.goto(base + path);
-  await page.waitForTimeout(1200);
-  if (SHOTS) await page.screenshot({ path: join(SHOTS, 'portal-' + (path ? 'play' : 'home') + '.png') });
+  await page.goto(base);
+  await page.waitForTimeout(800);
+  if (SHOTS) await page.screenshot({ path: join(SHOTS, 'portal-home.png') });
+  const hrefs = await page.$$eval('.card', (els) => els.map((a) => a.getAttribute('href')));
+  if (hrefs.length !== catalog.games.length) errors.push('expected ' + catalog.games.length + ' cards, got ' + hrefs.length);
   if (errors.length) failed++;
-  console.log((errors.length ? 'FAIL' : 'ok').padEnd(5), ('portal /' + path).padEnd(20), errors.join('; '));
+  console.log((errors.length ? 'FAIL' : 'ok').padEnd(5), 'portal home'.padEnd(20), errors.join('; '));
+  for (const game of catalog.games) {
+    const href = hrefs[catalog.games.indexOf(game)];
+    const errs = [];
+    await page.goto(base + href);
+    const title = await page.textContent('#title');
+    if (!title.includes(game.title)) errs.push('title shows "' + title + '"');
+    const frame = await (await page.waitForSelector('#game')).contentFrame();
+    await frame.waitForFunction(() => window.YT && window.YT.status().ready, null, { timeout: 8000 }).catch(() => errs.push('game in player never became ready'));
+    if (!frame.url().includes('/games/' + game.slug + '/')) errs.push('iframe loaded ' + frame.url());
+    if (SHOTS && game === catalog.games[0]) await page.screenshot({ path: join(SHOTS, 'portal-play.png') });
+    if (errs.length) failed++;
+    console.log((errs.length ? 'FAIL' : 'ok').padEnd(5), ('player ' + game.slug).padEnd(20), errs.join('; '));
+  }
   await page.close();
 }
 
