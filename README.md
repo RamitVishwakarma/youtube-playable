@@ -6,6 +6,7 @@ The website is a Next.js app. The flagship games are full 3D (three.js, bundled 
 
 | Game | Genre | Rewarded-ad hooks |
 |---|---|---|
+| 🏪 [Mini Mart Empire 3D](public/games/mini-mart) **(3D flagship)** | Supermarket tycoon: stock, serve, hire staff, buy new stores (three.js) | 2× cash, collect ×2 away earnings |
 | 🏃 [Grow Rush 3D](public/games/grow-rush) **(3D flagship)** | Gate runner + boss duel (three.js) | Revive, claim ×3 coins, Hero skin |
 | 🏎️ [Turbo Racer 3D](public/games/turbo-racer) **(3D flagship)** | Arcade racer vs 5 AI rivals (three.js) | Claim ×3 coins, Champion paint |
 | 🌀 [Helix Drop 3D](public/games/helix-drop) **(3D flagship)** | Helix tower drop with fireball combos (three.js) | Second chance, claim ×3 coins, Prism ball |

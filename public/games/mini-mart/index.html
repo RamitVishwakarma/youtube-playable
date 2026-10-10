@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- site-only:start (scripts/package.mjs strips this from Playables bundles) -->
+  <script>
+    // Relative paths need the trailing slash: /games/x -> /games/x/
+    if (/^https?:$/.test(location.protocol) && !/(\/|\.html)$/.test(location.pathname)) {
+      location.replace(location.pathname + '/' + location.search + location.hash);
+    }
+  </script>
+  <!-- site-only:end -->
+  <meta name="game-help" content="Drag anywhere to walk. Grab stock from the crates out back, carry it to the matching shelf, then stand in the circle behind the register to serve the queue. Walk over the cash to pick it up. Stand on a price circle to spend there: new aisles, a cashier and stockers who work for you, bigger arms, faster shoes, and finally a NEW STORE. Stores with a cashier and a stocker keep earning while you're away. Open the 🗺️ map to travel between your stores.">
+  <title>Mini Mart Empire 3D</title>
+  <!-- playables-sdk: scripts/package.mjs puts the YouTube Playables SDK here in
+       YouTube builds. The website must not load it: off YouTube its calls wait
+       for a host that never answers, which leaves the game on a black screen. -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "../../shared/vendor/three.min.js",
+        "flagship": "../../shared/flagship.js",
+        "sfx": "../../shared/sfx.js"
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../../shared/game.css">
+  <link rel="stylesheet" href="../../shared/flagship.css">
+  <style>:root { --accent: #ff5a5f; --accent-2: #3ddc97; } html, body { background: #8fd3ff; }</style>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="ui"></div>
+  <script src="../../shared/yt.js"></script>
+  <script type="module" src="game.js"></script>
+  <script src="../../shared/help.js" defer></script>
+</body>
+</html>
