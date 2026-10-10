@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <!-- site-only:start (scripts/package.mjs strips this from Playables bundles) -->
+  <script>
+    // Relative paths need the trailing slash: /games/x -> /games/x/
+    if (/^https?:$/.test(location.protocol) && !/(\/|\.html)$/.test(location.pathname)) {
+      location.replace(location.pathname + '/' + location.search + location.hash);
+    }
+  </script>
+  <!-- site-only:end -->
+  <title>Parking Jam Escape</title>
+  <!-- playables-sdk: scripts/package.mjs puts the YouTube Playables SDK here in
+       YouTube builds. The website must not load it: off YouTube its calls wait
+       for a host that never answers, which leaves the game on a black screen. -->
+  <link rel="stylesheet" href="../../shared/game.css">
+</head>
+<body>
+  <div id="game"></div>
+  <div id="ui"></div>
+  <script src="../../shared/yt.js"></script>
+  <script src="../../shared/kit.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,14 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "installCommand": "echo 'static site: no install needed'",
-  "buildCommand": "echo 'static site: no build needed'",
-  "outputDirectory": ".",
-  "trailingSlash": true,
-  "headers": [
-    {
-      "source": "/(.*)\\.(js|css)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
-    }
-  ]
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build"
 }
