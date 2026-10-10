@@ -1,14 +1,28 @@
 {
   "name": "youtube-playable",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Ten HTML5 games built for YouTube Playables, plus a portal website to play them.",
+  "description": "Ten HTML5 games built for YouTube Playables, hosted by a Next.js website.",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
-    "start": "npx --yes serve@14.2.6 .",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "npx --yes serve@14.2.6 out",
+    "typecheck": "tsc --noEmit",
     "test": "node tests/smoke.mjs",
     "package": "node scripts/package.mjs"
   },
+  "dependencies": {
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
   "devDependencies": {
-    "playwright": "1.56.1"
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "5.9.3"
   }
 }

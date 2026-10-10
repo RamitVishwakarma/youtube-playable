@@ -3,7 +3,9 @@
 //   dist/playables/<slug>.zip     ready to upload in the Playables portal
 //
 // The shared files are copied into each bundle and the ../../shared/ paths
-// are rewritten, so every zip stands alone. Checks the certification size
+// are rewritten, so every zip stands alone. The YouTube Playables SDK script is
+// added here: only YouTube builds load it (the website must not, see
+// public/shared/yt.js). Checks the certification size
 // limits (initial bundle <= 30 MiB, recommended <= 15 MiB; files < 30 MiB).
 //
 //   node scripts/package.mjs
@@ -17,14 +19,8 @@ const OUT = join(ROOT, 'dist', 'playables');
 const SHARED = ['yt.js', 'kit.js', 'game.css'];
 const MiB = 1024 * 1024;
 
-// games.js is a browser script (window.GAMES_CATALOG = {...};) so the portal
-// also works from file://; pull the JSON object out of it.
-async function loadCatalog(root) {
-  const src = await readFile(join(root, 'games.js'), 'utf8');
-  return JSON.parse(src.slice(src.indexOf('{'), src.lastIndexOf('}') + 1));
-}
-
-const { games } = await loadCatalog(ROOT);
+const { games } = JSON.parse(await readFile(join(ROOT, 'lib', 'games.json'), 'utf8'));
+const SDK_TAG = '<script src="https://www.youtube.com/game_api/v1"></script>';
 await rm(OUT, { recursive: true, force: true });
 await mkdir(OUT, { recursive: true });
 
@@ -47,21 +43,23 @@ async function dirSize(dir) {
 
 let failed = false;
 for (const g of games) {
-  const src = join(ROOT, 'games', g.slug);
+  const src = join(ROOT, 'public', 'games', g.slug);
   const dst = join(OUT, g.slug);
   await mkdir(join(dst, 'shared'), { recursive: true });
   for (const f of await readdir(src)) {
     if (f === 'index.html') {
       const html = (await readFile(join(src, f), 'utf8'))
         .replace(/[ \t]*<!-- site-only:start[\s\S]*?<!-- site-only:end -->\n?/, '')
+        // the SDK must load before any game code, so it replaces the marker in <head>
+        .replace(/[ \t]*<!-- playables-sdk:[\s\S]*?-->/, '  ' + SDK_TAG)
         .replaceAll('../../shared/', 'shared/');
-      if (html.includes('site-only') || !html.includes('game_api/v1')) throw new Error(g.slug + ': bad index.html after packaging');
+      if (html.includes('site-only') || !html.includes(SDK_TAG)) throw new Error(g.slug + ': bad index.html after packaging');
       await writeFile(join(dst, f), html);
     } else {
       await copyFile(join(src, f), join(dst, f));
     }
   }
-  for (const f of SHARED) await copyFile(join(ROOT, 'shared', f), join(dst, 'shared', f));
+  for (const f of SHARED) await copyFile(join(ROOT, 'public', 'shared', f), join(dst, 'shared', f));
   const size = await dirSize(dst);
   if (size > 30 * MiB) failed = true;
   const note = size > 30 * MiB ? 'OVER 30 MiB LIMIT' : size > 15 * MiB ? 'over 15 MiB recommendation' : 'ok';

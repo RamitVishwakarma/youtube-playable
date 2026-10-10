@@ -6,16 +6,22 @@ on:
     branches: [main]
 
 jobs:
-  smoke:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build website (static export)
+        run: npm run build
+      - name: Build YouTube Playables bundles
+        run: npm run package
       - name: Install Playwright
         run: npm install --no-save playwright@1.56.1 && npx playwright install --with-deps chromium
-      - name: Smoke test every game
-        run: node tests/smoke.mjs
-      - name: Build Playables bundles
-        run: node scripts/package.mjs
+      - name: Smoke test website and bundles
+        run: npm test
