@@ -66,7 +66,8 @@ const server = createServer(async (req, res) => {
 await new Promise((r) => server.listen(0, r));
 const base = 'http://127.0.0.1:' + server.address().port + '/';
 
-const browser = await chromium.launch();
+// software WebGL so the 3D games render in headless CI
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 if (SHOTS) await mkdir(SHOTS, { recursive: true });
 let failed = 0;
 function report(ok, name, detail) {

@@ -55,6 +55,7 @@ export default function GameGrid({ games }: { games: Game[] }) {
           <Link key={g.slug} className="card" href={`/play/${g.slug}/`}>
             <div className="thumb" style={{ background: thumbBackground(g) }}>
               <span className="genre">{g.genre}</span>
+              {g.badge && <span className="badge">{g.badge}</span>}
               <span className="ico">{g.icon}</span>
             </div>
             <div className="body">

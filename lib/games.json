@@ -1,6 +1,25 @@
 {
   "games": [
     {
+      "slug": "grow-rush",
+      "title": "Grow Rush 3D",
+      "icon": "🏃",
+      "genre": "3D runner",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Run through the right gates, grow into a giant, knock out the boss.",
+      "how": "Drag left and right to steer. Blue gates grow you, red gates shrink you, crystals add +1. Dodge saws and walls, then out-size the boss at the finish.",
+      "rewarded": [
+        "Revive after shrinking to nothing",
+        "Claim ×3 coins",
+        "Unlock the Hero skin"
+      ],
+      "colors": [
+        "#5aa9ff",
+        "#ff6fd8"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",

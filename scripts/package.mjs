@@ -10,7 +10,7 @@
 //
 //   node scripts/package.mjs
 import { readFile, writeFile, mkdir, rm, readdir, stat, copyFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -46,20 +46,30 @@ for (const g of games) {
   const src = join(ROOT, 'public', 'games', g.slug);
   const dst = join(OUT, g.slug);
   await mkdir(join(dst, 'shared'), { recursive: true });
+  let shared = new Set(SHARED);
   for (const f of await readdir(src)) {
     if (f === 'index.html') {
+      // copy every shared file the page references (import map, scripts, styles)
+      const page = await readFile(join(src, f), 'utf8');
+      for (const m of page.matchAll(/\.\.\/\.\.\/shared\/([\w./-]+)/g)) shared.add(m[1]);
       const html = (await readFile(join(src, f), 'utf8'))
         .replace(/[ \t]*<!-- site-only:start[\s\S]*?<!-- site-only:end -->\n?/, '')
         // the SDK must load before any game code, so it replaces the marker in <head>
         .replace(/[ \t]*<!-- playables-sdk:[\s\S]*?-->/, '  ' + SDK_TAG)
-        .replaceAll('../../shared/', 'shared/');
+        // ./ prefix: import maps reject bare relative paths like shared/x.js
+        .replaceAll('../../shared/', './shared/');
       if (html.includes('site-only') || !html.includes(SDK_TAG)) throw new Error(g.slug + ': bad index.html after packaging');
       await writeFile(join(dst, f), html);
     } else {
       await copyFile(join(src, f), join(dst, f));
     }
   }
-  for (const f of SHARED) await copyFile(join(ROOT, 'public', 'shared', f), join(dst, 'shared', f));
+  // three.js ships with its MIT license
+  if ([...shared].some((f) => f.startsWith('vendor/three'))) shared.add('vendor/THREE-LICENSE.txt');
+  for (const f of shared) {
+    await mkdir(dirname(join(dst, 'shared', f)), { recursive: true });
+    await copyFile(join(ROOT, 'public', 'shared', f), join(dst, 'shared', f));
+  }
   const size = await dirSize(dst);
   if (size > 30 * MiB) failed = true;
   const note = size > 30 * MiB ? 'OVER 30 MiB LIMIT' : size > 15 * MiB ? 'over 15 MiB recommendation' : 'ok';

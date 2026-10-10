@@ -1,11 +1,13 @@
 # Playables Arcade
 
-Ten small HTML5 games built for **YouTube Playables**, plus a website where anyone can play them in a browser.
+HTML5 games built for **YouTube Playables**, plus a website where anyone can play them in a browser.
 
-The website is a Next.js app. Each game is plain JavaScript drawing to a Canvas, with no frameworks, build step or external assets. Each one is under 50 KB, works in both portrait and landscape, and calls the YouTube Playables SDK for saves, pause/resume, audio, scores and ads.
+The website is a Next.js app. The flagship games are full 3D (three.js, bundled locally) or polished canvas games, and the original ten are small canvas games (under 50 KB each). None of them use external assets. Every game works in portrait and landscape and calls the YouTube Playables SDK for saves, pause/resume, audio, scores and ads.
 
 | Game | Genre | Rewarded-ad hooks |
 |---|---|---|
+| 🏃 [Grow Rush 3D](public/games/grow-rush) **(3D flagship)** | Gate runner + boss duel (three.js) | Revive, claim ×3 coins, Hero skin |
+| 🧱 [Block Burst](public/games/block-burst) **(flagship)** | 8×8 block puzzle | Second chance |
 | 🐶 [Draw to Save](public/games/draw-to-save) | Physics puzzle | +50% ink, skip level |
 | 🔩 [Bolt Sort](public/games/bolt-sort) | Sort puzzle (solver-verified levels) | Extra bolt |
 | 🚗 [Parking Jam Escape](public/games/parking-jam) | Spatial puzzle (solvability-checked) | Hint, continue |
@@ -41,6 +43,9 @@ public/games/<slug>/       each game: index.html + game.js (plain JS, no build)
 public/shared/yt.js        YouTube Playables SDK wrapper (+ browser fallbacks)
 public/shared/kit.js       canvas stage, game loop, input, audio, UI panels
 public/shared/game.css     shared HUD / panel styles
+public/shared/flagship.*   UI kit for the 3D games (title, HUD, panels, shop, praise)
+public/shared/sfx.js       synth sound effects shared by the 3D games
+public/shared/vendor/      three.js (bundled, MIT) — rebuild with scripts/vendor-three.sh
 scripts/package.mjs        builds standalone YouTube bundles (zip per game)
 tests/smoke.mjs            headless Chromium tests for the site and bundles
 ```
