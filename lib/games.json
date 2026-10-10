@@ -76,6 +76,25 @@
       ]
     },
     {
+      "slug": "stack-tower",
+      "title": "Stack Tower 3D",
+      "icon": "🏗️",
+      "genre": "3D arcade",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "One tap. Drop each block, slice off the overhang, stack to the sky.",
+      "how": "Tap to drop the sliding block onto the tower. Anything hanging over the edge is sliced off, so the next block is smaller. Land a perfect drop to keep the full size, and chain perfects to grow it back.",
+      "rewarded": [
+        "Continue after a miss",
+        "Double coins",
+        "Unlock block colours"
+      ],
+      "colors": [
+        "#c56cf0",
+        "#45aaf2"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
