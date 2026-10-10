@@ -20,6 +20,24 @@
       ]
     },
     {
+      "slug": "turbo-racer",
+      "title": "Turbo Racer 3D",
+      "icon": "🏎️",
+      "genre": "3D racing",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Hold to drive, slide to steer, beat five rivals to the line.",
+      "how": "Hold anywhere to accelerate and slide your finger to steer; let go to brake before sharp corners or you'll drift wide and spin out. Hit boost pads and ramps. Finish top 3 to unlock the next race.",
+      "rewarded": [
+        "Claim ×3 coins",
+        "Unlock the Champion paint"
+      ],
+      "colors": [
+        "#2f7dff",
+        "#e8203a"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
