@@ -15,6 +15,7 @@ The website is a Next.js app. The flagship games are full 3D (three.js, bundled 
 | 🚌 [Bus Rush 3D](public/games/bus-rush) **(3D flagship)** | Colour bus-sorting puzzle with solver-checked levels (three.js) | +2 benches, claim ×3 coins |
 | 🏀 [Hoop Shot 3D](public/games/hoop-shot) **(3D flagship)** | Swipe-to-shoot arcade basketball with rim physics (three.js) | +15 s, claim ×3, Beach ball |
 | 🔪 [Knife Hit 3D](public/games/knife-hit) **(3D flagship)** | Knife-throwing at spinning logs, apples and boss targets (three.js) | Continue, claim ×3, Candy knife |
+| 🎳 [Bowling Strike 3D](public/games/bowling-strike) **(3D flagship)** | Ten-pin bowling with hook and pin chain reactions (three.js) | Retry roll, claim ×2, Gold ball |
 | 🧱 [Block Burst](public/games/block-burst) **(flagship)** | 8×8 block puzzle | Second chance |
 | 🐶 [Draw to Save](public/games/draw-to-save) | Physics puzzle | +50% ink, skip level |
 | 🔩 [Bolt Sort](public/games/bolt-sort) | Sort puzzle (solver-verified levels) | Extra bolt |

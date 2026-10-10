@@ -169,6 +169,25 @@
       ]
     },
     {
+      "slug": "bowling-strike",
+      "title": "Bowling Strike 3D",
+      "icon": "🎳",
+      "genre": "3D sports",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Ten-pin bowling: swipe to bowl, curve it to hook into the pocket, chase 300.",
+      "how": "Drag sideways to line up, then swipe up to bowl. The angle aims, the speed sets the pace, and a curved swipe puts hook on the ball. Pins knock each other down, so every roll plays out differently. A full ten frames with strikes, spares and the tenth-frame bonus.",
+      "rewarded": [
+        "Retry a roll (once per game)",
+        "Claim ×2 coins",
+        "Unlock the Gold ball"
+      ],
+      "colors": [
+        "#7209b7",
+        "#21d4d4"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
