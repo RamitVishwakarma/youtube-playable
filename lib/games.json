@@ -1,6 +1,22 @@
 {
   "games": [
     {
+      "slug": "block-burst",
+      "title": "Block Burst",
+      "icon": "🧱",
+      "genre": "Block puzzle",
+      "featured": true,
+      "tagline": "Drag glossy blocks onto the board, clear lines, chain combos.",
+      "how": "Drag a piece from the tray onto the 8×8 board. Fill a row or column to clear it; clear on consecutive moves for combos. The game ends when no piece fits.",
+      "rewarded": [
+        "Second chance (clears the middle of the board)"
+      ],
+      "colors": [
+        "#4f6bff",
+        "#ff4d6d"
+      ]
+    },
+    {
       "slug": "draw-to-save",
       "title": "Draw to Save",
       "icon": "🐶",
