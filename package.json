@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "description": "Ten HTML5 games built for YouTube Playables, hosted by a Next.js website.",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
