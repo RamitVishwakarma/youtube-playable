@@ -22,9 +22,13 @@ export function asset(path: string): string {
   return (process.env.NEXT_PUBLIC_BASE_PATH ?? '') + path;
 }
 
-/** The game's standalone page. Explicit index.html works on every static host. */
+/**
+ * The game's standalone page. Use the folder URL: Vercel serves
+ * games/<slug>/index.html only at /games/<slug>/ and 404s the literal
+ * /games/<slug>/index.html path.
+ */
 export function gameSrc(slug: string): string {
-  return asset(`/games/${slug}/index.html`);
+  return asset(`/games/${slug}/`);
 }
 
 export function thumbBackground(g: Game): string {
