@@ -12,6 +12,7 @@ The website is a Next.js app. The flagship games are full 3D (three.js, bundled 
 | 🐍 [Serpent Smash 3D](public/games/serpent-smash) **(3D flagship)** | Snake arena: grow, swallow, beat the boss (three.js) | Revive, claim ×3 coins, Prism skin |
 | 🏗️ [Stack Tower 3D](public/games/stack-tower) **(3D flagship)** | One-tap stacker with slicing and perfect chains (three.js) | Continue, double coins, block colours |
 | 🛒 [Checkout Rush 3D](public/games/checkout-rush) **(3D flagship)** | Supermarket till sim: scan, take payment, count change (three.js) | Claim ×3, free upgrades |
+| 🚌 [Bus Rush 3D](public/games/bus-rush) **(3D flagship)** | Colour bus-sorting puzzle with solver-checked levels (three.js) | +2 benches, claim ×3 coins |
 | 🧱 [Block Burst](public/games/block-burst) **(flagship)** | 8×8 block puzzle | Second chance |
 | 🐶 [Draw to Save](public/games/draw-to-save) | Physics puzzle | +50% ink, skip level |
 | 🔩 [Bolt Sort](public/games/bolt-sort) | Sort puzzle (solver-verified levels) | Extra bolt |

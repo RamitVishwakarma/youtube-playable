@@ -113,6 +113,24 @@
       ]
     },
     {
+      "slug": "bus-rush",
+      "title": "Bus Rush 3D",
+      "icon": "🚌",
+      "genre": "3D puzzle",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Get every passenger on the bus of their colour before the benches fill up.",
+      "how": "Tap a passenger with a clear path to the road. If the waiting bus matches their colour they hop on; otherwise they wait on a bench. Full buses drive off and the next one pulls in. Fill all five benches with nobody able to board and it's over. Plan who to send first.",
+      "rewarded": [
+        "+2 benches when you're stuck",
+        "Claim ×3 coins"
+      ],
+      "colors": [
+        "#ffb703",
+        "#ff4d5e"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
