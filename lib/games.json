@@ -38,6 +38,25 @@
       ]
     },
     {
+      "slug": "helix-drop",
+      "title": "Helix Drop 3D",
+      "icon": "🌀",
+      "genre": "3D arcade",
+      "featured": true,
+      "badge": "3D",
+      "tagline": "Spin the tower, drop through the gaps, never touch red.",
+      "how": "Drag left and right to spin the tower so the bouncing ball falls through the gaps. Red slices are deadly. Fall through three floors in a row to become a fireball that smashes anything.",
+      "rewarded": [
+        "Second chance (clears the red below you)",
+        "Claim ×3 coins",
+        "Unlock the Prism ball"
+      ],
+      "colors": [
+        "#6a5cff",
+        "#ff8fd2"
+      ]
+    },
+    {
       "slug": "block-burst",
       "title": "Block Burst",
       "icon": "🧱",
