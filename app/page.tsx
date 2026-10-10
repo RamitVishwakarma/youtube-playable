@@ -15,7 +15,7 @@ export default function Home() {
 
       <section className="hero">
         <h1>
-          Ten tiny games. <span>Zero installs.</span>
+          Real games. <span>Zero installs.</span>
         </h1>
         <p>
           Puzzles, physics, tycoon and arcade games built for YouTube Playables. Every one runs in your
@@ -23,7 +23,7 @@ export default function Home() {
         </p>
         <div className="pills">
           <span className="pill"><b>{games.length}</b> games</span>
-          <span className="pill">Under <b>50 KB</b> each</span>
+          <span className="pill"><b>{games.filter((g) => g.badge === '3D').length}</b> in 3D</span>
           <span className="pill">Saves your progress</span>
           <span className="pill">No sign-up</span>
         </div>

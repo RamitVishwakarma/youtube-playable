@@ -23,7 +23,7 @@ const SITE = join(ROOT, 'out');
 const BUNDLES = join(ROOT, 'dist', 'playables');
 const shotsIdx = process.argv.indexOf('--shots');
 const SHOTS = shotsIdx > 0 ? process.argv[shotsIdx + 1] : null;
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.ico': 'image/x-icon' };
 const SDK_URL = 'https://www.youtube.com/game_api/v1';
 
 for (const [dir, cmd] of [[SITE, 'npm run build'], [BUNDLES, 'npm run package']]) {
@@ -97,6 +97,16 @@ for (const game of games) {
     const { page, errors } = await sitePage({ viewport: { width: vp.width, height: vp.height } });
     await page.goto(base + 'games/' + game.slug + '/');
     await readyIn(page).catch(() => errors.push('gameReady never fired'));
+    // in-game help: the "?" opens a how-to sheet and closes again
+    const help = await page.waitForSelector('.yt-help-btn', { timeout: 3000 }).catch(() => null);
+    if (!help) errors.push('no in-game help button');
+    else {
+      // trigger it directly: a game's own start panel may sit over its HUD
+      await help.evaluate((b) => b.click());
+      if (!(await page.$('.yt-help-overlay'))) errors.push('help button did not open the sheet');
+      await page.click('.yt-help-card button', { timeout: 3000 }).catch(() => errors.push('help sheet has no close button'));
+      if (await page.$('.yt-help-overlay')) errors.push('help sheet did not close');
+    }
     const { width: w, height: h } = vp;
     for (let i = 0; i < 6; i++) {
       await page.mouse.click(w * (0.2 + 0.12 * i), h * (0.35 + 0.08 * (i % 4)));
@@ -140,6 +150,12 @@ async function checkPlayer(page, game, errors) {
   await page.waitForSelector('.card');
   if (SHOTS) await page.screenshot({ path: join(SHOTS, 'portal-home.png') });
   const hrefs = await page.$$eval('.card', (els) => els.map((a) => a.getAttribute('href')));
+  const thumbs = await page.$$eval('.card .thumb img', (els) => els.map((i) => i.getAttribute('src')));
+  for (const t of thumbs) {
+    const res = await page.request.get(new URL(t, base).href);
+    if (!res.ok() || !(res.headers()['content-type'] || '').includes('image')) errors.push('thumbnail missing: ' + t);
+  }
+  if (thumbs.length !== games.length) errors.push('expected a screenshot on every card, got ' + thumbs.length);
   if (hrefs.length !== games.length) errors.push('expected ' + games.length + ' cards, got ' + hrefs.length);
   report(!errors.length, 'portal home', errors.join('\n   '));
 

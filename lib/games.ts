@@ -34,6 +34,11 @@ export function gameSrc(slug: string): string {
   return asset(`/games/${slug}/`);
 }
 
+/** Gameplay screenshot used on cards (public/thumbs/<slug>.webp, 3:4). */
+export function thumbSrc(slug: string): string {
+  return asset(`/thumbs/${slug}.webp`);
+}
+
 export function thumbBackground(g: Game): string {
   return `linear-gradient(135deg, ${g.colors[0]}, ${g.colors[1]})`;
 }

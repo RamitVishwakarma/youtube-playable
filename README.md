@@ -54,6 +54,8 @@ public/shared/kit.js       canvas stage, game loop, input, audio, UI panels
 public/shared/game.css     shared HUD / panel styles
 public/shared/flagship.*   UI kit for the 3D games (title, HUD, panels, shop, praise)
 public/shared/sfx.js       synth sound effects shared by the 3D games
+public/shared/help.js      in-game "?" how-to-play sheet (text from lib/games.json via scripts/sync-help.mjs)
+public/thumbs/             gameplay screenshots used on the portal cards
 public/shared/vendor/      three.js (bundled, MIT) — rebuild with scripts/vendor-three.sh
 scripts/package.mjs        builds standalone YouTube bundles (zip per game)
 tests/smoke.mjs            headless Chromium tests for the site and bundles
@@ -108,8 +110,8 @@ npm test
 
 The smoke test covers both the website and the YouTube bundles:
 
-- **Website games:** every game boots in portrait and landscape and survives taps and drags, including at a URL without the trailing slash.
-- **Portal:** every card opens its own game, both on a full page load and with client-side navigation.
+- **Website games:** every game boots in portrait and landscape, its in-game "?" help opens and closes, and it survives taps and drags, including at a URL without the trailing slash.
+- **Portal:** every card shows its gameplay screenshot and opens its own game, both on a full page load and with client-side navigation.
 - **No SDK on the website:** the website never requests the YouTube SDK.
 - **Stuck SDK:** each bundle still boots with a fake SDK whose calls never resolve.
 - **Working SDK:** each bundle reads its cloud save through a fake SDK that does respond.

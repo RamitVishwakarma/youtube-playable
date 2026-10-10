@@ -819,6 +819,12 @@ let time = 0, raceT = 0, countT = 0, shake = 0;
 let finishers = [];
 let hud = null, posEl = null, speedEl = null, speedLines = null;
 let stopHand = null;
+let steerT = 0; // seconds the player has been driving with the hint up
+/** Remove the steering hint; `learned` marks the tutorial as done for good. */
+function dismissHand(learned) {
+  if (stopHand) { stopHand(); stopHand = null; }
+  if (learned && !save.tutorial) { save.tutorial = true; persist(); }
+}
 const input = { down: false, x0: 0, d0: 0 };
 const engine = loopVoice('sawtooth', 700);
 const engine2 = loopVoice('square', 400);
@@ -877,6 +883,7 @@ function playerPlace() {
 
 function showTitle() {
   state = 'title';
+  dismissHand(false);
   showHud(false);
   engine.stop(); engine2.stop();
   setupRace();
@@ -920,6 +927,7 @@ function showCount(text) {
 
 function onPlayerFinish() {
   state = 'finish';
+  dismissHand(false);
   const place = playerPlace();
   if (place === 1) { sfx.fanfare(); UI.praise('1ST PLACE!', '#ffd60a'); } else if (place <= 3) { sfx.win(); UI.praise(ordinal(place).toUpperCase() + '!', '#7dffb2'); } else { sfx.lose(); }
   UI.buzz(place === 1 ? [30, 40, 30, 40, 80] : 30);
@@ -1038,7 +1046,7 @@ canvas.addEventListener('pointerdown', (e) => {
   input.x0 = e.clientX;
   input.d0 = player ? player.targetD : 0;
   try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
-  if (stopHand && state === 'race') { stopHand(); stopHand = null; save.tutorial = true; persist(); }
+  if (state === 'race') dismissHand(true);
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!input.down || e.pointerId !== input.id || !player) return;
@@ -1068,10 +1076,15 @@ function update(dt) {
     if (c !== lastCount && c >= 0) {
       lastCount = c;
       if (c > 0) { showCount(String(c)); tone(440, 0, 0.18, 'square', 0.1); }
-      else { showCount('GO!'); tone(880, 0, 0.35, 'square', 0.12); state = 'race'; if (!save.tutorial) stopHand = UI.tutorialHand(() => [[window.innerWidth * 0.35, window.innerHeight * 0.75], [window.innerWidth * 0.65, window.innerHeight * 0.75]], 'Hold & slide to steer'); }
+      else { showCount('GO!'); tone(880, 0, 0.35, 'square', 0.12); state = 'race'; dismissHand(false); steerT = 0; if (!save.tutorial && !input.down) stopHand = UI.tutorialHand(() => [[window.innerWidth * 0.35, window.innerHeight * 0.75], [window.innerWidth * 0.65, window.innerHeight * 0.75]], 'Hold & slide to steer'); }
     }
   }
   if (state === 'race' || state === 'finish') raceT += dt;
+  // a player already holding the throttle (or steering by keys) knows the controls
+  if (stopHand && state === 'race' && (input.down || keys.ArrowLeft || keys.ArrowRight || keys.KeyA || keys.KeyD)) {
+    steerT += dt;
+    if (steerT > 0.6) dismissHand(true);
+  }
   if (player && state !== 'title') {
     if (keys.ArrowLeft || keys.KeyA) player.targetD = Math.max(-ROAD_W - 1, player.targetD - dt * 9);
     if (keys.ArrowRight || keys.KeyD) player.targetD = Math.min(ROAD_W + 1, player.targetD + dt * 9);

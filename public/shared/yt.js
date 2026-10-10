@@ -46,6 +46,7 @@
   let cloudReadOk = false;
   let audioOn = true;
   const listeners = { pause: [], resume: [], audio: [] };
+  let held = false;
 
   function emit(type, arg) {
     for (const fn of listeners[type]) {
@@ -201,6 +202,17 @@
         if (inPlayables) return await withTimeout(sdk.system.getLanguage(), SDK_TIMEOUT_MS, 'getLanguage');
       } catch (e) { logWarning(e); }
       return navigator.language || 'en';
+    },
+
+    /**
+     * Pause or resume the game from inside it (e.g. while the help sheet is
+     * open). Fires the same handlers as a YouTube pause; nested holds are
+     * ignored.
+     */
+    hold(on) {
+      if (!!on === held) return;
+      held = !!on;
+      emit(held ? 'pause' : 'resume');
     },
 
     onPause(fn) { listeners.pause.push(fn); },
