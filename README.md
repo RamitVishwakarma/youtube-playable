@@ -56,7 +56,8 @@ public/shared/game.css     shared HUD / panel styles
 public/shared/flagship.*   UI kit for the 3D games (title, HUD, panels, shop, praise)
 public/shared/sfx.js       synth sound effects shared by the 3D games
 public/shared/help.js      in-game "?" how-to-play sheet (text from lib/games.json via scripts/sync-help.mjs)
-public/thumbs/             gameplay screenshots used on the portal cards
+public/shared/models.js    shared low-poly character (legs, face, hair styles, walk cycle) for the 3D games
+public/thumbs/             gameplay screenshots: 3:4 cards, wide/ 16:9 for the home banner
 public/shared/vendor/      three.js (bundled, MIT) — rebuild with scripts/vendor-three.sh
 scripts/package.mjs        builds standalone YouTube bundles (zip per game)
 tests/smoke.mjs            headless Chromium tests for the site and bundles

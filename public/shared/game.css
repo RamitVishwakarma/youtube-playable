@@ -19,7 +19,8 @@ html, body {
 #ui > * { pointer-events: auto; }
 
 .kit-hud {
-  position: absolute; top: 0; left: 0; right: 0;
+  /* sits over the play area (kit.js sets --stage-*), not the letterbox */
+  position: absolute; top: 0; left: var(--stage-x, 0); width: var(--stage-w, 100%);
   display: flex; justify-content: space-between; align-items: flex-start;
   gap: 8px; padding: 10px 12px; pointer-events: none !important; z-index: 3;
 }

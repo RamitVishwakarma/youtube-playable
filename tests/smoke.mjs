@@ -143,14 +143,19 @@ async function checkPlayer(page, game, errors) {
   const frame = await (await page.waitForSelector('#game')).contentFrame();
   await readyIn(frame).catch(() => errors.push('game in player never became ready'));
   if (!frame.url().includes('/games/' + game.slug + '/')) errors.push('iframe loaded ' + frame.url());
+  const more = await page.$$eval('.more .gcard', (els) => els.map((a) => a.getAttribute('href')));
+  if (more.length > 4) errors.push('player lists ' + more.length + ' other games (max 4)');
+  if (more.some((h) => h.includes('/play/' + game.slug + '/'))) errors.push('player recommends the game itself');
 }
 {
   const { page, errors } = await sitePage({ viewport: { width: 1200, height: 800 } });
   await page.goto(base);
-  await page.waitForSelector('.card');
+  // the "All games" grid lists every game exactly once (rows above repeat some)
+  const ALL = 'main.grid .gcard';
+  await page.waitForSelector(ALL);
   if (SHOTS) await page.screenshot({ path: join(SHOTS, 'portal-home.png') });
-  const hrefs = await page.$$eval('.card', (els) => els.map((a) => a.getAttribute('href')));
-  const thumbs = await page.$$eval('.card .thumb img', (els) => els.map((i) => i.getAttribute('src')));
+  const hrefs = await page.$$eval(ALL, (els) => els.map((a) => a.getAttribute('href')));
+  const thumbs = await page.$$eval(ALL + ' .gthumb img', (els) => els.map((i) => i.getAttribute('src')));
   for (const t of thumbs) {
     const res = await page.request.get(new URL(t, base).href);
     if (!res.ok() || !(res.headers()['content-type'] || '').includes('image')) errors.push('thumbnail missing: ' + t);
@@ -169,7 +174,7 @@ async function checkPlayer(page, game, errors) {
   for (const [i, game] of games.entries()) {
     errors.length = 0;
     await page.goto(base);
-    await page.locator('.card').nth(i).click();
+    await page.locator(ALL).nth(i).click();
     await page.waitForURL('**/play/' + game.slug + '/');
     await checkPlayer(page, game, errors);
     report(!errors.length, 'player ' + game.slug + ' (client navigation)', errors.join('\n   '));

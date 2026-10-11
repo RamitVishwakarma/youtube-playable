@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Player from '@/components/Player';
-import { games, getGame } from '@/lib/games';
+import { games, getGame, related } from '@/lib/games';
 
 export const dynamicParams = false;
 
@@ -19,5 +19,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PlayPage({ params }: Props) {
   const game = getGame((await params).slug);
   if (!game) notFound();
-  return <Player game={game} others={games.filter((g) => g !== game)} />;
+  return <Player game={game} related={related(game, 4)} />;
 }

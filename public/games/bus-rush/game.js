@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import * as UI from 'flagship';
 import { sfx, tone, noise, initAudio, suspendAudio, resumeAudio } from 'sfx';
+import { makeHuman, animateHuman, SHARED_GEOMETRIES } from 'models';
 
 const COLORS = [
   { id: 'red', hex: '#ff4d5e' }, { id: 'blue', hex: '#3d8bff' }, { id: 'yellow', hex: '#ffd23f' },
@@ -153,23 +154,12 @@ scene.add(world);
 // ---------------------------------------------------------------------------
 // Models
 // ---------------------------------------------------------------------------
-const personGeo = {
-  body: new THREE.CapsuleGeometry(0.25, 0.42, 6, 12),
-  head: new THREE.SphereGeometry(0.22, 16, 12),
-};
 const colorMats = COLORS.map((c) => mat(c.hex, { roughness: 0.4 }));
-const skinMat = mat('#ffd6b0');
+// passengers wear their bus colour: shirt and cap
 function makePerson(ci) {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(personGeo.body, colorMats[ci]);
-  body.position.y = 0.48;
-  const head = new THREE.Mesh(personGeo.head, skinMat);
-  head.position.y = 1.0;
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.235, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), colorMats[ci]);
-  cap.position.y = 1.05;
-  body.castShadow = head.castShadow = cap.castShadow = true;
-  g.add(body, head, cap);
-  return g;
+  const h = makeHuman({ shirt: COLORS[ci].hex, cap: COLORS[ci].hex, scale: 1.05 });
+  h.root.userData.h = h;
+  return h.root;
 }
 function makeBus(ci) {
   const g = new THREE.Group();
@@ -341,7 +331,7 @@ const benchPos = (i) => new THREE.Vector3(BENCH_X[i] * 1.0, 0, -0.75);
 const seatPos = (n) => BUS_POS.clone().add(new THREE.Vector3(-0.8 + n * 0.8, 1.75, 0));
 
 function clearWorld() {
-  world.traverse((o) => { if (o.geometry && !Object.values(personGeo).includes(o.geometry)) o.geometry.dispose(); });
+  world.traverse((o) => { if (o.geometry && !SHARED_GEOMETRIES.has(o.geometry)) o.geometry.dispose(); });
   world.clear();
   people.clear();
   walkers = [];
@@ -425,7 +415,6 @@ function refreshReach() {
   // reachable passengers stand up straight and glow a little; others dim
   for (const [k, p] of people) {
     const ok = reachSet.has(k);
-    p.g.children[0].material = colorMats[p.color];
     p.g.scale.setScalar(ok ? 1 : 0.92);
     if (tiles[k]) tiles[k].material.color.set(ok ? '#ffffff' : '#e4e4ec');
   }
@@ -691,6 +680,7 @@ function update(dt) {
     p.shake = Math.max(0, (p.shake || 0) - dt);
     p.g.position.x = cellPos(p.k).x + s;
     p.g.position.y = 0.17 + (reachSet.has(p.k) ? Math.abs(Math.sin(time * 4 + p.bob)) * 0.06 : 0);
+    animateHuman(p.g.userData.h, dt, 0);
   }
   for (let i = walkers.length - 1; i >= 0; i--) {
     const w = walkers[i];
@@ -705,7 +695,7 @@ function update(dt) {
     } else {
       pos.addScaledVector(d.normalize(), Math.min(dist, speed * dt));
       if (Math.abs(d.x) + Math.abs(d.z) > 0.01) w.p.g.rotation.y = Math.atan2(d.x, d.z);
-      w.p.g.children[0].rotation.z = Math.sin(time * 18) * 0.12;
+      animateHuman(w.p.g.userData.h, dt, speed);
     }
   }
   // bus movement

@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import * as UI from 'flagship';
 import { sfx, tone, noise, initAudio, suspendAudio, resumeAudio } from 'sfx';
+import { makeHuman } from 'models';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -311,31 +312,17 @@ function cheese() {
 const SKIN = ['#ffd6a5', '#e0a878', '#a86b45', '#6b4226'];
 const SHIRTS = ['#ef476f', '#118ab2', '#06d6a0', '#ffd166', '#8338ec', '#ff7f50', '#3a86ff', '#fb5607'];
 function makeCustomer() {
-  const g = new THREE.Group();
-  const shirt = mat(SHIRTS[(Math.random() * SHIRTS.length) | 0]);
-  const skin = mat(SKIN[(Math.random() * SKIN.length) | 0]);
-  const pants = mat(['#22223b', '#3d5a80', '#6c584c', '#495057'][(Math.random() * 4) | 0]);
-  const torso = rbox(0.75, 0.9, 0.45, 0.18, shirt);
-  torso.position.y = 1.55;
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.33, 20, 14), skin);
-  head.position.y = 2.32;
-  head.castShadow = true;
-  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat(['#2b2118', '#6f4e37', '#e9c46a', '#d62828', '#111'][(Math.random() * 5) | 0]));
-  hair.position.y = 2.36;
-  const eyes = [-0.11, 0.11].map((x) => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), mat('#111')); e.position.set(x, 2.36, 0.3); return e; });
-  const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.02, 6, 12, Math.PI), mat('#7a1f2b'));
-  mouth.position.set(0, 2.22, 0.31);
-  mouth.rotation.z = Math.PI;
-  const legs = [-0.18, 0.18].map((x) => { const l = rbox(0.26, 1.0, 0.3, 0.1, pants); l.position.set(x, 0.55, 0); return l; });
-  const arms = [-0.5, 0.5].map((x) => { const a = rbox(0.2, 0.8, 0.22, 0.09, shirt); a.position.set(x, 1.5, 0); return a; });
-  g.add(torso, head, hair, ...eyes, mouth, ...legs, ...arms);
+  // the shared character at double size: the till is framed for big, friendly customers
+  const h = makeHuman({ skin: SKIN[(Math.random() * SKIN.length) | 0], shirt: SHIRTS[(Math.random() * SHIRTS.length) | 0], scale: 2 });
+  const g = new THREE.Group(); // unscaled wrapper so the ring keeps its size and height
+  g.add(h.root);
   // patience ring above the head
   const ringBg = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.28, 32), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.25, depthTest: false }));
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.28, 32, 1, 0, Math.PI * 2), new THREE.MeshBasicMaterial({ color: '#3ddc97', depthTest: false }));
   ringBg.position.y = ring.position.y = 2.95;
   ringBg.renderOrder = ring.renderOrder = 5;
   g.add(ringBg, ring);
-  return { g, mouth, legs, arms, ring, ringBg, shirt, skin };
+  return { g, h, mouth: h.smile, legs: h.legs, arms: h.arms, ring, ringBg };
 }
 
 // ---------------------------------------------------------------------------
@@ -579,7 +566,7 @@ function leave(c) {
 
 function setMood(c, mood) {
   c.model.mouth.rotation.z = mood === 'happy' ? Math.PI : 0;
-  c.model.mouth.position.y = mood === 'happy' ? 2.22 : 2.18;
+  c.model.mouth.position.y = mood === 'happy' ? -0.055 : -0.075;
 }
 
 function walkOut(c) {

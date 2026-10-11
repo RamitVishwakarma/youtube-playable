@@ -58,7 +58,52 @@
       st.ox = (cw - W * st.scale) / 2;
       st.oy = (ch - H * st.scale) / 2;
       st.dpr = dpr;
+      buildBackdrop(cw, ch, dpr);
+      // let the HUD line up with the play area instead of the window edges
+      const r = canvas.getBoundingClientRect();
+      const root = document.documentElement.style;
+      root.setProperty('--stage-x', Math.round(r.left + st.ox) + 'px');
+      root.setProperty('--stage-y', Math.round(r.top + st.oy) + 'px');
+      root.setProperty('--stage-w', Math.round(W * st.scale) + 'px');
+      root.setProperty('--stage-h', Math.round(H * st.scale) + 'px');
       if (opts.onResize) opts.onResize(st);
+    }
+
+    // Letterbox backdrop, drawn once per resize: a soft radial glow in the
+    // game's letterbox colour, a faint dot grid, and a shadow that lifts the
+    // play area off it, so wide screens look framed rather than cut off.
+    let backdrop = null;
+    function shade(hex, k) {
+      const n = parseInt(hex.replace('#', '').padEnd(6, '0').slice(0, 6), 16);
+      const ch = (v) => Math.max(0, Math.min(255, Math.round(v + (k > 0 ? (255 - v) * k : v * k))));
+      return 'rgb(' + ch(n >> 16) + ',' + ch((n >> 8) & 255) + ',' + ch(n & 255) + ')';
+    }
+    function buildBackdrop(cw, ch, dpr) {
+      const bars = cw - W * st.scale > 24 || ch - H * st.scale > 24;
+      if (!bars || !/^#[0-9a-f]{3,6}$/i.test(st.letterbox)) { backdrop = null; return; }
+      const c = backdrop || document.createElement('canvas');
+      c.width = Math.round(cw * dpr);
+      c.height = Math.round(ch * dpr);
+      const g = c.getContext('2d');
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const base = st.letterbox;
+      const grad = g.createRadialGradient(cw / 2, ch / 2, 10, cw / 2, ch / 2, Math.max(cw, ch) * 0.75);
+      grad.addColorStop(0, shade(base, 0.16));
+      grad.addColorStop(0.55, base);
+      grad.addColorStop(1, shade(base, -0.45));
+      g.fillStyle = grad;
+      g.fillRect(0, 0, cw, ch);
+      g.fillStyle = 'rgba(255,255,255,0.05)';
+      for (let y = 12; y < ch; y += 26) for (let x = 12 + ((y / 26) % 2) * 13; x < cw; x += 26) { g.beginPath(); g.arc(x, y, 1.3, 0, Math.PI * 2); g.fill(); }
+      const w = W * st.scale, h = H * st.scale;
+      g.shadowColor = 'rgba(0,0,0,0.55)';
+      g.shadowBlur = 40;
+      g.fillStyle = shade(base, -0.3);
+      g.beginPath();
+      g.roundRect(st.ox, st.oy, w, h, Math.min(18, w * 0.03));
+      g.fill();
+      g.shadowBlur = 0;
+      backdrop = c;
     }
     window.addEventListener('resize', resize);
     resize();
@@ -66,8 +111,11 @@
     st.begin = function () {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = st.letterbox;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (backdrop) ctx.drawImage(backdrop, 0, 0);
+      else {
+        ctx.fillStyle = st.letterbox;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
       const s = st.scale * st.dpr;
       ctx.setTransform(s, 0, 0, s, st.ox * st.dpr, st.oy * st.dpr);
       ctx.save();
