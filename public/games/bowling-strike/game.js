@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import * as UI from 'flagship';
 import { sfx, tone, noise, initAudio, suspendAudio, resumeAudio } from 'sfx';
+import { studio } from 'look';
 
 // lane geometry (metres, roughly regulation)
 const LANE_W = 1.05, HALF = LANE_W / 2;
@@ -54,6 +55,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color('#120a24');
 scene.fog = new THREE.Fog('#120a24', 16, 34);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 80);
+studio(renderer, scene, { intensity: 0.5 });
 scene.add(new THREE.HemisphereLight(0xe8e0ff, 0x2a1a10, 1.0));
 const sun = new THREE.DirectionalLight(0xffffff, 1.6);
 sun.position.set(1.5, 6, 2);
