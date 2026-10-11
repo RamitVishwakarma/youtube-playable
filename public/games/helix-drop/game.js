@@ -170,11 +170,11 @@ const stripeTex = canvasTexture(128, 128, (g, w) => {
 const mats = {
   pole: new THREE.MeshStandardMaterial({ color: '#ffffff', map: stripeTex, roughness: 0.28, metalness: 0 }),
   collar: new THREE.MeshPhysicalMaterial({ color: '#ffd60a', roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.15 }),
-  plat: new THREE.MeshPhysicalMaterial({ color: '#3b2a9a', vertexColors: true, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.12 }),
+  plat: new THREE.MeshPhysicalMaterial({ color: '#3b2a9a', vertexColors: true, roughness: 0.55, clearcoat: 1, clearcoatRoughness: 0.1 }),
   red: new THREE.MeshPhysicalMaterial({ color: '#ff1f4b', vertexColors: true, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08, emissive: '#ff0030', emissiveIntensity: 0.35 }),
   finish: new THREE.MeshStandardMaterial({ color: '#ffc83d', vertexColors: true, roughness: 0.22, metalness: 0.85, emissive: '#5a3a00', emissiveIntensity: 0.5 }),
   ball: new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.06 }),
-  fire: new THREE.MeshStandardMaterial({ color: '#ffb000', emissive: '#ff5a00', emissiveIntensity: 1.7, roughness: 0.35 }),
+  fire: new THREE.MeshStandardMaterial({ color: '#ff7a00', emissive: '#ff4a00', emissiveIntensity: 1.1, roughness: 0.35 }),
   shard: new THREE.MeshPhysicalMaterial({ color: '#ffffff', vertexColors: true, roughness: 0.3, clearcoat: 0.8, clearcoatRoughness: 0.15 }),
 };
 
@@ -216,7 +216,7 @@ scene.add(trail);
 // warm glow sprite around the fireball
 const glowTex = canvasTexture(64, 64, (g, w) => {
   const gr = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
-  gr.addColorStop(0, 'rgba(255,220,120,1)'); gr.addColorStop(0.35, 'rgba(255,120,0,0.55)'); gr.addColorStop(1, 'rgba(255,60,0,0)');
+  gr.addColorStop(0, 'rgba(255,190,80,0.9)'); gr.addColorStop(0.4, 'rgba(255,100,0,0.45)'); gr.addColorStop(1, 'rgba(255,60,0,0)');
   g.fillStyle = gr; g.fillRect(0, 0, w, w);
 }, { srgb: false });
 const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
@@ -361,9 +361,9 @@ function shatter(p, fire) {
         tm.copy(p.group.matrixWorld).multiply(tm2).multiply(tm2.makeTranslation(set.c.x, set.c.y, set.c.z));
         tm.decompose(s.p, s.q, ts);
         const out = tv.set(s.p.x, 0, s.p.z).normalize();
-        s.v.copy(out).multiplyScalar(4 + Math.random() * 5).add(ts.set((Math.random() - 0.5) * 2, 2.5 + Math.random() * 4, (Math.random() - 0.5) * 2));
+        s.v.copy(out).multiplyScalar(2.6 + Math.random() * 3.4).add(ts.set((Math.random() - 0.5) * 1.5, 1.5 + Math.random() * 3, -Math.random() * 1.5));
         s.w.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 14);
-        s.life = 0.9 + Math.random() * 0.4;
+        s.life = 0.6 + Math.random() * 0.35;
         set.mesh.setColorAt(idx, tc.set(col));
       }
       set.live = SHARDS;
@@ -371,6 +371,8 @@ function shatter(p, fire) {
     }
   });
   p.meshes.forEach((m) => { if (m) m.visible = false; });
+  const i = platforms.indexOf(p);
+  if (collars && i >= 0) { collars.setMatrixAt(i, tm.makeScale(0, 0, 0)); collars.instanceMatrix.needsUpdate = true; }
 }
 const DROPS = 160;
 const drops = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.08, 1), new THREE.MeshBasicMaterial({ color: '#ffffff' }), DROPS);
@@ -397,7 +399,7 @@ function updateFx(dt) {
       s.v.y += GRAVITY * 0.55 * dt;
       s.p.addScaledVector(s.v, dt);
       s.q.multiply(tq.setFromEuler(te.set(s.w.x * dt, s.w.y * dt, s.w.z * dt)));
-      const k = Math.max(0.001, Math.min(1, s.life / 0.35));
+      const k = 0.8 * Math.max(0.001, Math.min(1, s.life / 0.4));
       tm.compose(s.p, s.q, ts.set(k, k, k));
       set.mesh.setMatrixAt(i, tm);
     }
@@ -765,8 +767,8 @@ function update(dt) {
   }
   glow.visible = B.fire && state === 'play';
   if (glow.visible) {
-    glow.position.copy(ball.position);
-    glow.scale.setScalar(1.9 + Math.sin(time * 22) * 0.15);
+    glow.position.set(0, ball.position.y, BALL_DIST - 0.35);
+    glow.scale.setScalar(1.35 + Math.sin(time * 22) * 0.1);
     emberT -= dt;
     if (emberT <= 0) { emberT = 0.025; splash(ball.position, ['#ffd60a', '#ff8a00', '#ff5a00'], 1, { speed: 0.4, up: 1, g: -0.05, size: 0.9 }); }
   }

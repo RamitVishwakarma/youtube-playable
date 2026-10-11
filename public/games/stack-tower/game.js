@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import * as UI from 'flagship';
 import { sfx, tone, noise, initAudio, suspendAudio, resumeAudio } from 'sfx';
+import { studio, canvasTexture, fitShadow } from 'look';
 
 const H = 1;               // block height
 const START = 6;           // starting block size
@@ -45,12 +46,20 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 // orthographic camera: the classic isometric stack look
 const camera = new THREE.OrthographicCamera(-10, 10, 10, -10, -100, 200);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444466, 0.95));
-const key = new THREE.DirectionalLight(0xffffff, 1.7);
-key.castShadow = true;
-key.shadow.mapSize.set(1024, 1024);
-Object.assign(key.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: 1, far: 80 });
+studio(renderer, scene, { intensity: 0.55 });
+const hemi = new THREE.HemisphereLight(0xffffff, 0x50406a, 0.55);
+scene.add(hemi);
+const key = new THREE.DirectionalLight(0xfff2e2, 2.1);
+fitShadow(key, 16, 2048);
+key.shadow.camera.near = 1;
+key.shadow.camera.far = 90;
+key.shadow.camera.updateProjectionMatrix();
+key.shadow.bias = -0.0006;
 scene.add(key, key.target);
+// soft cool fill from the opposite side keeps the shadowed faces colourful
+const fill = new THREE.DirectionalLight(0xbcd2ff, 0.55);
+fill.position.set(-14, 6, 4);
+scene.add(fill, fill.target);
 
 let viewSize = 15;
 function resize() {
@@ -68,38 +77,153 @@ function applyZoom() {
 }
 window.addEventListener('resize', resize);
 
-// background: vertical gradient that follows the tower colour
+// ---------------------------------------------------------------------------
+// Sky: a gradient that drifts from day to dusk to deep space as the tower rises
+// ---------------------------------------------------------------------------
 const bgCanvas = document.createElement('canvas');
 bgCanvas.width = 4;
 bgCanvas.height = 256;
 const bgTex = new THREE.CanvasTexture(bgCanvas);
 bgTex.colorSpace = THREE.SRGBColorSpace;
 scene.background = bgTex;
-function paintBackground(hue) {
+const SKY_TOP = [[0, 0.62, 0.74], [250, 0.55, 0.52], [245, 0.6, 0.16]];
+const SKY_BOT = [[340, 0.62, 0.84], [20, 0.8, 0.7], [270, 0.5, 0.3]];
+const skyT = (y) => Math.max(0, Math.min(2, y / 45));
+function mixHsl(stops, t, hue, out) {
+  const i = Math.min(1, Math.floor(t)), f = t - i, a = stops[i], b = stops[i + 1];
+  // the first stop follows the tower colour so each skin gets its own sky
+  const ha = i === 0 ? (hue + 30 + a[0]) % 360 : a[0];
+  let dh = b[0] - ha;
+  dh = ((dh % 360) + 540) % 360 - 180;
+  return out.setHSL((((ha + dh * f) % 360) + 360) % 360 / 360, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, THREE.SRGBColorSpace);
+}
+const skyA = new THREE.Color(), skyB = new THREE.Color();
+let paintedAt = -1, paintedHue = -1;
+function paintBackground(hue, y = 0) {
+  const t = skyT(y);
+  if (Math.abs(t - paintedAt) < 0.01 && hue === paintedHue) return;
+  paintedAt = t; paintedHue = hue;
+  mixHsl(SKY_TOP, t, hue, skyA);
+  mixHsl(SKY_BOT, t, hue - 60, skyB);
   const g = bgCanvas.getContext('2d');
   const grd = g.createLinearGradient(0, 0, 0, 256);
-  grd.addColorStop(0, 'hsl(' + ((hue + 30) % 360) + ',70%,72%)');
-  grd.addColorStop(1, 'hsl(' + ((hue + 340) % 360) + ',60%,40%)');
+  grd.addColorStop(0, '#' + skyA.getHexString(THREE.SRGBColorSpace));
+  grd.addColorStop(1, '#' + skyB.getHexString(THREE.SRGBColorSpace));
   g.fillStyle = grd;
   g.fillRect(0, 0, 4, 256);
   bgTex.needsUpdate = true;
+  hemi.color.copy(skyA).lerp(new THREE.Color('#ffffff'), 0.6);
+  clouds.forEach((c) => (c.material.opacity = Math.max(0, 1 - Math.max(0, t - 0.6) * 1.6) * c.userData.alpha));
+  stars.material.opacity = Math.max(0, Math.min(1, (t - 1) * 1.4));
+  stars.visible = stars.material.opacity > 0.01;
 }
 
-const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+// backdrop layers sit on a plane behind the tower, facing the camera
+const VIEW_DIR = new THREE.Vector3(1, 1, 1).normalize();
+const SIDE = new THREE.Vector3(1, 0, -1).normalize();
+const backAt = (u, v, depth, out) => out.copy(SIDE).multiplyScalar(u).addScaledVector(VIEW_DIR, -depth).setY(v - depth * VIEW_DIR.y);
+const cloudTex = canvasTexture(256, 128, (g, w, h) => {
+  // a few overlapping soft puffs with a flat-ish bottom
+  const puffs = [[0.3, 0.62, 0.22], [0.5, 0.48, 0.3], [0.7, 0.6, 0.22], [0.42, 0.68, 0.2], [0.6, 0.7, 0.2]];
+  for (const [x, y, r] of puffs) {
+    const gr = g.createRadialGradient(x * w, y * h, 0, x * w, y * h, r * w);
+    gr.addColorStop(0, 'rgba(255,255,255,0.95)'); gr.addColorStop(0.6, 'rgba(255,255,255,0.75)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  }
+}, { srgb: false });
+const clouds = [];
+for (let i = 0; i < 9; i++) {
+  const c = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, fog: false }));
+  const s = 7 + Math.random() * 7;
+  c.scale.set(s, s * 0.5, 1);
+  c.userData = { u: (Math.random() - 0.5) * 44, v: i * 7 - 18, alpha: 0.55 + Math.random() * 0.35, drift: 0.2 + Math.random() * 0.4, depth: 30 + Math.random() * 20 };
+  c.renderOrder = -2;
+  scene.add(c);
+  clouds.push(c);
+}
+const STARS = 220;
+const starPos = new Float32Array(STARS * 3);
+const tv = new THREE.Vector3();
+for (let i = 0; i < STARS; i++) backAt((Math.random() - 0.5) * 120, (Math.random() - 0.5) * 90, 60, tv).toArray(starPos, i * 3);
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const starTex = canvasTexture(32, 32, (g, w) => {
+  const gr = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.7)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, w);
+}, { srgb: false });
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ map: starTex, size: 5, sizeAttenuation: false, transparent: true, depthWrite: false, opacity: 0 }));
+stars.frustumCulled = false;
+stars.renderOrder = -3;
+scene.add(stars);
+function updateBackdrop(dt) {
+  const zoom = viewSize / 15;
+  for (const c of clouds) {
+    const d = c.userData;
+    d.u += d.drift * dt;
+    if (d.u > 26) d.u -= 52;
+    // clouds scroll slower than the tower for a bit of parallax
+    let v = d.v - camY * 0.45;
+    v = ((v + 30) % 60 + 60) % 60 - 30;
+    backAt(d.u * zoom, camY + v * zoom, d.depth, c.position);
+  }
+  stars.position.set(0, camY, 0);
+  stars.scale.setScalar(Math.max(1, zoom));
+}
+
+// ---------------------------------------------------------------------------
+// Blocks: rounded slabs, rebuilt at their exact size so corners stay round
+// ---------------------------------------------------------------------------
+function slabGeo(w, d, h = H) {
+  const r = Math.max(0.02, Math.min(0.14, w * 0.3, d * 0.3));
+  const g = new THREE.RoundedBoxGeometry(w, h, d, 2, r);
+  // a gentle top-to-bottom gradient so every layer reads on its own
+  const pos = g.attributes.position, col = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const t = (pos.getY(i) + h / 2) / h;
+    const v = 0.74 + 0.26 * t;
+    col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = v;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+}
 const tower = new THREE.Group();
 scene.add(tower);
 let baseHue = 320;
-const colorFor = (i) => new THREE.Color().setHSL((((baseHue + i * 4.5) % 360) + 360) % 360 / 360, 0.72, 0.6, THREE.SRGBColorSpace);
+const colorFor = (i) => new THREE.Color().setHSL((((baseHue + i * 4.5) % 360) + 360) % 360 / 360, 0.74, 0.6, THREE.SRGBColorSpace);
+function blockMat(i) {
+  const s = SKINS.find((k) => k.id === save.skin) || SKINS[0];
+  const shiny = s.id === 'gold';
+  return new THREE.MeshStandardMaterial({ color: colorFor(i), vertexColors: true, roughness: shiny ? 0.22 : 0.3, metalness: shiny ? 0.65 : 0.05, emissive: 0xffffff, emissiveIntensity: 0 });
+}
 
 function addBlock(x, z, w, d, y, i) {
-  const m = new THREE.Mesh(boxGeo, new THREE.MeshStandardMaterial({ color: colorFor(i), roughness: 0.55 }));
-  m.scale.set(w, H, d);
+  const m = new THREE.Mesh(slabGeo(w, d), blockMat(i));
   m.position.set(x, y, z);
   m.castShadow = m.receiveShadow = true;
   tower.add(m);
   return m;
 }
+function resizeBlock(m, w, d) {
+  m.geometry.dispose();
+  m.geometry = slabGeo(w, d);
+}
 
+// the pedestal: a porcelain column with gold trims, kept between runs
+const pedestal = new THREE.Group();
+pedestal.userData.keep = true;
+{
+  const porcelain = new THREE.MeshPhysicalMaterial({ color: '#f4efe9', roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.25, vertexColors: true });
+  const gold = new THREE.MeshStandardMaterial({ color: '#f2c14e', roughness: 0.25, metalness: 0.9 });
+  const plain = new THREE.MeshPhysicalMaterial({ color: '#e9e2da', roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.25 });
+  const part = (geo, mat, y) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; m.castShadow = m.receiveShadow = true; pedestal.add(m); return m; };
+  const col = slabGeo(START, START, 11.2);
+  part(col, porcelain, -5.1);
+  part(new THREE.RoundedBoxGeometry(START + 0.5, 0.35, START + 0.5, 2, 0.12), gold, -0.55);
+  part(new THREE.RoundedBoxGeometry(START + 0.9, 0.5, START + 0.9, 2, 0.16), plain, -9.2);
+  part(new THREE.RoundedBoxGeometry(START + 1.3, 0.3, START + 1.3, 2, 0.1), gold, -9.6);
+  part(new THREE.RoundedBoxGeometry(START + 2.2, 1.6, START + 2.2, 3, 0.3), plain, -10.5);
+}
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -108,25 +232,24 @@ let paused = false, menuOpen = false;
 let stack = [];      // {x,z,w,d,mesh}
 let moving = null;   // {axis,dir,t,mesh,...}
 let falling = [];    // sliced pieces
-let score = 0, combo = 0, speed = 1, time = 0, camY = 0, shake = 0, revived = false;
+let score = 0, combo = 0, speed = 1, time = 0, camY = 0, shake = 0, thud = 0, revived = false;
 let hud = null, scoreEl = null, stopHand = null;
 let ripples = [];
 
 function skinHue() { const s = SKINS.find((k) => k.id === save.skin) || SKINS[0]; return s.hue; }
 
 function resetTower() {
-  tower.traverse((o) => { if (o.material) o.material.dispose(); });
+  tower.remove(pedestal);
+  tower.traverse((o) => { if (o.isMesh) { o.material.dispose(); o.geometry.dispose(); } });
   tower.clear();
-  falling.forEach((f) => scene.remove(f.mesh));
+  tower.add(pedestal);
+  falling.forEach((f) => { scene.remove(f.mesh); f.mesh.material.dispose(); f.mesh.geometry.dispose(); });
   falling = [];
   stack = [];
   baseHue = skinHue();
-  paintBackground(baseHue);
-  // the base pillar
-  const base = addBlock(0, 0, START, START, -H * 6, -1);
-  base.scale.y = H * 12;
-  stack.push({ x: 0, z: 0, w: START, d: START, mesh: base, y: 0 });
-  stack[0].mesh.position.y = -H * 6 + 0.5;
+  paintBackground(baseHue, 0);
+  // the pedestal top is the first layer
+  stack.push({ x: 0, z: 0, w: START, d: START, mesh: pedestal, y: 0 });
   score = 0;
   combo = 0;
   speed = 1;
@@ -180,7 +303,9 @@ function drop() {
       const grow = 0.35;
       if (axis === 'x') nw = Math.min(START, nw + grow); else nd = Math.min(START, nd + grow);
     }
-    ripple(nx, m.y, nz, nw, nd);
+    ripple(nx, m.y, nz, nw, nd, combo);
+    sparkle(nx, m.y + H / 2, nz, nw, nd, combo >= 3 ? '#ffe066' : '#ffffff');
+    m.mesh.material.emissiveIntensity = 0.55;
     perfectSound(combo);
     UI.buzz(10);
     if (combo >= 2) UI.praise(combo >= 5 ? 'INCREDIBLE ×' + combo : 'PERFECT ×' + combo, '#fff7ae');
@@ -205,9 +330,11 @@ function drop() {
     noise(0, 0.08, 0.12, 900);
     UI.buzz(6);
   }
-  m.mesh.scale.set(nw, H, nd);
+  if (nw !== m.w || nd !== m.d) resizeBlock(m.mesh, nw, nd);
   m.mesh.position.set(nx, m.y, nz);
+  m.mesh.userData.squash = 1;
   stack.push({ x: nx, z: nz, w: nw, d: nd, mesh: m.mesh, y: m.y });
+  thud = 1;
   score += 1;
   scoreEl.textContent = String(score);
   scoreEl.classList.remove('bump');
@@ -230,19 +357,78 @@ function sliceOff(existing, x, z, w, d, y, axis, sign) {
   if (!existing) tower.remove(mesh);
   scene.add(mesh);
   mesh.position.set(x, y, z);
-  mesh.scale.set(w, H, d);
-  falling.push({ mesh, vy: 0, vx: axis === 'x' ? sign * 1.5 : 0, vz: axis === 'z' ? sign * 1.5 : 0, rx: axis === 'z' ? sign * 1.6 : 0, rz: axis === 'x' ? -sign * 1.6 : 0, life: 3 });
+  // tumble away from the tower, spinning about the cut edge
+  const push = 1.6 + Math.random() * 1.2;
+  falling.push({
+    mesh, vy: 1.5 + Math.random(), vx: axis === 'x' ? sign * push : (Math.random() - 0.5) * 0.6, vz: axis === 'z' ? sign * push : (Math.random() - 0.5) * 0.6,
+    rx: axis === 'z' ? sign * (2.2 + Math.random() * 2) : (Math.random() - 0.5) * 1.2, ry: (Math.random() - 0.5) * 2.4, rz: axis === 'x' ? -sign * (2.2 + Math.random() * 2) : (Math.random() - 0.5) * 1.2, life: 2.6,
+  });
 }
 
-function ripple(x, y, z, w, d) {
-  const geo = new THREE.EdgesGeometry(new THREE.PlaneGeometry(1, 1));
-  const mat = new THREE.LineBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.9 });
-  const line = new THREE.LineSegments(geo, mat);
-  line.rotation.x = -Math.PI / 2;
-  line.position.set(x, y + H / 2 + 0.01, z);
-  line.scale.set(w, d, 1);
-  scene.add(line);
-  ripples.push({ line, t: 0, w, d });
+/** A glowing rounded outline that rings out from a perfect drop. */
+function ringGeo(w, d, t) {
+  const rr = (W, D, r) => {
+    const p = new THREE.Shape(), x = -W / 2, y = -D / 2;
+    p.moveTo(x + r, y); p.lineTo(x + W - r, y); p.quadraticCurveTo(x + W, y, x + W, y + r); p.lineTo(x + W, y + D - r);
+    p.quadraticCurveTo(x + W, y + D, x + W - r, y + D); p.lineTo(x + r, y + D); p.quadraticCurveTo(x, y + D, x, y + D - r);
+    p.lineTo(x, y + r); p.quadraticCurveTo(x, y, x + r, y);
+    return p;
+  };
+  const outer = rr(w + t * 2, d + t * 2, 0.35 + t);
+  outer.holes.push(rr(w, d, 0.35));
+  const g = new THREE.ShapeGeometry(outer, 4);
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+function ripple(x, y, z, w, d, c = 1) {
+  const n = c >= 3 ? 2 : 1;
+  for (let k = 0; k < n; k++) {
+    const mat = new THREE.MeshBasicMaterial({ color: c >= 3 ? '#fff3a0' : '#ffffff', transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
+    const ring = new THREE.Mesh(ringGeo(w + 0.25, d + 0.25, 0.22), mat);
+    ring.position.set(x, y - H / 2 + 0.05, z);
+    scene.add(ring);
+    ripples.push({ line: ring, t: -k * 0.14 });
+  }
+}
+
+// little glitter bits that pop off the rim of a perfect drop
+const SPARKS = 90;
+const sparkMesh = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.12, 0), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }), SPARKS);
+sparkMesh.frustumCulled = false;
+sparkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+scene.add(sparkMesh);
+const sparks = [];
+const sm = new THREE.Matrix4(), sq = new THREE.Quaternion(), ss = new THREE.Vector3(), se = new THREE.Euler(), sc = new THREE.Color();
+function sparkle(x, y, z, w, d, color) {
+  for (let i = 0; i < 16; i++) {
+    if (sparks.length >= SPARKS) sparks.shift();
+    // a random point on the slab outline
+    const e = Math.random() * 2 * (w + d);
+    let px, pz;
+    if (e < w) { px = -w / 2 + e; pz = -d / 2; } else if (e < w + d) { px = w / 2; pz = -d / 2 + e - w; } else if (e < 2 * w + d) { px = w / 2 - (e - w - d); pz = d / 2; } else { px = -w / 2; pz = d / 2 - (e - 2 * w - d); }
+    const len = Math.hypot(px, pz) || 1;
+    sparks.push({ p: new THREE.Vector3(x + px, y, z + pz), v: new THREE.Vector3((px / len) * (1.5 + Math.random() * 2), 2 + Math.random() * 3, (pz / len) * (1.5 + Math.random() * 2)), life: 0.5 + Math.random() * 0.4, r: Math.random() * 6, color });
+  }
+}
+function updateSparks(dt) {
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const p = sparks[i];
+    p.life -= dt;
+    if (p.life <= 0) { sparks.splice(i, 1); continue; }
+    p.v.y -= 9 * dt;
+    p.p.addScaledVector(p.v, dt);
+    p.r += dt * 8;
+  }
+  for (let i = 0; i < SPARKS; i++) {
+    const p = sparks[i];
+    if (!p) { sm.makeScale(0, 0, 0); sparkMesh.setMatrixAt(i, sm); continue; }
+    const k = Math.min(1, p.life * 3);
+    sm.compose(p.p, sq.setFromEuler(se.set(p.r, p.r * 0.7, 0)), ss.set(k, k, k));
+    sparkMesh.setMatrixAt(i, sm);
+    sparkMesh.setColorAt(i, sc.set(p.color));
+  }
+  sparkMesh.instanceMatrix.needsUpdate = true;
+  if (sparkMesh.instanceColor) sparkMesh.instanceColor.needsUpdate = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -350,8 +536,12 @@ function openShop() {
 }
 function recolour() {
   baseHue = skinHue();
-  paintBackground(baseHue);
-  stack.forEach((s, i) => { if (i > 0) s.mesh.material.color.copy(colorFor(i)); });
+  paintBackground(baseHue, camY);
+  stack.forEach((s, i) => {
+    if (i === 0) return;
+    s.mesh.material.dispose();
+    s.mesh.material = blockMat(i);
+  });
 }
 
 function gameOver() {
@@ -438,22 +628,36 @@ function update(dt) {
   for (let i = falling.length - 1; i >= 0; i--) {
     const f = falling[i];
     f.life -= dt;
-    f.vy -= 30 * dt;
+    f.vy -= 26 * dt;
     f.mesh.position.x += f.vx * dt;
     f.mesh.position.y += f.vy * dt;
     f.mesh.position.z += f.vz * dt;
     f.mesh.rotation.x += f.rx * dt;
+    f.mesh.rotation.y += f.ry * dt;
     f.mesh.rotation.z += f.rz * dt;
-    if (f.life <= 0) { scene.remove(f.mesh); f.mesh.material.dispose(); falling.splice(i, 1); }
+    if (f.life < 0.5) f.mesh.scale.setScalar(Math.max(0.01, f.life / 0.5));
+    if (f.life <= 0) { scene.remove(f.mesh); f.mesh.material.dispose(); f.mesh.geometry.dispose(); falling.splice(i, 1); }
   }
   for (let i = ripples.length - 1; i >= 0; i--) {
     const r = ripples[i];
     r.t += dt;
-    const k = 1 + r.t * 1.4;
-    r.line.scale.set(r.w * k, r.d * k, 1);
-    r.line.material.opacity = Math.max(0, 0.9 - r.t * 1.8);
+    const t = Math.max(0, r.t);
+    const k = 1 + t * 0.9;
+    r.line.scale.set(k, 1, k);
+    r.line.material.opacity = r.t < 0 ? 0 : Math.max(0, 0.95 - t * 1.9);
     if (r.t > 0.5) { scene.remove(r.line); r.line.geometry.dispose(); r.line.material.dispose(); ripples.splice(i, 1); }
   }
+  // landing squash and perfect flash on the freshest layers
+  for (let i = Math.max(1, stack.length - 3); i < stack.length; i++) {
+    const m = stack[i].mesh, u = m.userData;
+    if (u.squash) {
+      u.squash = Math.max(0, u.squash - dt * 5);
+      const q = Math.sin(u.squash * Math.PI) * 0.12;
+      m.scale.set(1 + q * 0.4, 1 - q, 1 + q * 0.4);
+    }
+    if (m.material.emissiveIntensity > 0) m.material.emissiveIntensity = Math.max(0, m.material.emissiveIntensity - dt * 2.2);
+  }
+  updateSparks(dt);
   // camera rises with the tower; zooms out at game over
   const topY = stack.length ? stack[stack.length - 1].y : 0;
   const targetY = zoomOut ? topY / 2 : topY;
@@ -461,10 +665,15 @@ function update(dt) {
   const targetView = zoomOut ? Math.max(15, topY * 0.75 + 6) : 15;
   if (Math.abs(viewSize - targetView) > 0.01) { viewSize += (targetView - viewSize) * Math.min(1, dt * 2.5); applyZoom(); }
   shake = Math.max(0, shake - dt * 2);
-  camera.position.set(20 + (Math.random() - 0.5) * shake, camY + 20, 20);
-  camera.lookAt(0, camY, 0);
+  thud = Math.max(0, thud - dt * 6);
+  camera.position.set(20 + (Math.random() - 0.5) * shake, camY + 20 - thud * 0.12, 20 + (Math.random() - 0.5) * shake);
+  camera.lookAt(0, camY - thud * 0.12, 0);
   key.position.set(10, camY + 25, 15);
-  key.target.position.set(0, camY, 0);
+  key.target.position.set(0, camY - 4, 0);
+  const half = Math.max(16, viewSize * 1.4);
+  if (key.shadow.camera.top !== half) { Object.assign(key.shadow.camera, { left: -half, right: half, top: half, bottom: -half }); key.shadow.camera.updateProjectionMatrix(); }
+  paintBackground(baseHue, camY);
+  updateBackdrop(dt);
 }
 
 let last = performance.now(), first = true;
