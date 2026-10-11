@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: { default: 'Playables Arcade', template: '%s · Playables Arcade' },
-  description: 'Ten free HTML5 games built for YouTube Playables. Play them right in your browser.',
+  description: 'Free 3D and casual games built for YouTube Playables. Play them right in your browser, on any screen.',
 };
 
 export const viewport: Viewport = {

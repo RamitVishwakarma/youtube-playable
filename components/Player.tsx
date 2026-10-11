@@ -2,14 +2,23 @@
 
 import Link from 'next/link';
 import { useRef } from 'react';
-import { type Game, gameSrc, thumbBackground, thumbSrc } from '@/lib/games';
+import Brand from '@/components/Brand';
+import GameCard from '@/components/GameCard';
+import { type Game, gameSrc, playsWide } from '@/lib/games';
 
 /**
- * The game, and nothing in its way. Help lives inside each game (its "?"
- * button). On screens with room beside the game, other games show as cards.
+ * The game gets the stage: 3D games fill it edge to edge (any aspect), the
+ * portrait 2D games sit in a phone frame. Up to four related games sit in a
+ * slim column beside it when the screen has room.
  */
-export default function Player({ game, others }: { game: Game; others: Game[] }) {
+export default function Player({ game, related }: { game: Game; related: Game[] }) {
   const iframe = useRef<HTMLIFrameElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  const wide = playsWide(game);
+  function fullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else frame.current?.requestFullscreen?.().catch(() => {});
+  }
   return (
     <div className="play-page">
       <div className="bar">
@@ -17,9 +26,14 @@ export default function Player({ game, others }: { game: Game; others: Game[] })
           ←
         </Link>
         <h1 id="title">{game.title}</h1>
+        <span className="bar-genre">{game.genre}</span>
+        <span className="bar-brand"><Brand /></span>
+        <button type="button" className="fs" onClick={fullscreen} aria-label="Fullscreen" title="Fullscreen">
+          ⛶
+        </button>
       </div>
-      <div className="stage">
-        <div className="frame phone">
+      <div className={'stage' + (wide ? ' wide' : '')}>
+        <div className={'frame' + (wide ? ' wide' : ' phone')} ref={frame}>
           <iframe
             ref={iframe}
             id="game"
@@ -29,15 +43,10 @@ export default function Player({ game, others }: { game: Game; others: Game[] })
             onLoad={() => iframe.current?.contentWindow?.focus()}
           />
         </div>
-        <aside className="more" aria-label="Other games">
-          {others.map((g) => (
-            <Link key={g.slug} className="mcard" href={`/play/${g.slug}/`}>
-              <span className="mthumb" style={{ background: thumbBackground(g) }}>
-                <img src={thumbSrc(g.slug)} alt="" loading="lazy" width={480} height={640} />
-                {g.badge && <i>{g.badge}</i>}
-              </span>
-              <b>{g.title}</b>
-            </Link>
+        <aside className="more" aria-label="More games like this">
+          <h2>More like this</h2>
+          {related.map((g) => (
+            <GameCard key={g.slug} game={g} compact />
           ))}
         </aside>
       </div>

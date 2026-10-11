@@ -1,60 +1,51 @@
 import Brand from '@/components/Brand';
-import GameGrid from '@/components/GameGrid';
+import Hero from '@/components/Hero';
+import Home from '@/components/Home';
 import { games } from '@/lib/games';
 
-export default function Home() {
+export default function Page() {
+  const picks = games.filter((g) => g.badge === '3D').slice(0, 5);
   return (
-    <div className="wrap">
+    <div className="site">
       <header className="top">
-        <Brand />
-        <nav>
-          <a href="#games">Games</a>
-          <a href="#about">About</a>
-        </nav>
+        <div className="wrap top-in">
+          <Brand />
+          <nav>
+            <a href="#games">Games</a>
+            <a href="#about">About</a>
+          </nav>
+        </div>
       </header>
-
-      <section className="hero">
-        <h1>
-          Real games. <span>Zero installs.</span>
-        </h1>
-        <p>
-          Puzzles, physics, tycoon and arcade games built for YouTube Playables. Every one runs in your
-          browser on phone or desktop, in portrait or landscape.
-        </p>
-        <div className="pills">
-          <span className="pill"><b>{games.length}</b> games</span>
-          <span className="pill"><b>{games.filter((g) => g.badge === '3D').length}</b> in 3D</span>
-          <span className="pill">Saves your progress</span>
-          <span className="pill">No sign-up</span>
-        </div>
-      </section>
-
-      <GameGrid games={games} />
-
-      <section className="about" id="about">
-        <div>
-          <h4>Built for YouTube Playables</h4>
-          <p>
-            Each game uses the YouTube Playables SDK for cloud saves, pause/resume, audio settings, scores
-            and ads, and ships to YouTube as a small self-contained bundle.
-          </p>
-        </div>
-        <div>
-          <h4>Same game, two homes</h4>
-          <p>
-            On YouTube the SDK handles saves and real ads. Here, progress is saved in your browser and ads
-            are a short demo placeholder.
-          </p>
-        </div>
-        <div>
-          <h4>Fair rewarded ads</h4>
-          <p>
-            Ads are always optional: watch one for a hint, a revive or bonus coins. Interstitials only
-            appear between levels.
-          </p>
-        </div>
-      </section>
-      <footer>Playables Arcade · original games, no tracking, no external assets.</footer>
+      <div className="wrap">
+        <Hero picks={picks} />
+        <Home games={games} />
+        <section className="about" id="about">
+          <div>
+            <h4>Built for YouTube Playables</h4>
+            <p>
+              Every game uses the YouTube Playables SDK for cloud saves, pause and resume, audio settings, scores and
+              ads, and ships to YouTube as a small self-contained bundle.
+            </p>
+          </div>
+          <div>
+            <h4>Phone, tablet or desktop</h4>
+            <p>
+              The 3D games fill any screen, portrait or landscape. Touch, mouse and keyboard all work, and each game has
+              a <b>?</b> button that explains how to play.
+            </p>
+          </div>
+          <div>
+            <h4>Fair, optional ads</h4>
+            <p>
+              Ads are always your choice: watch one for a revive, a boost or bonus coins. Here on the website they are a
+              short demo placeholder.
+            </p>
+          </div>
+        </section>
+        <footer>
+          <span>Playables Arcade</span> · {games.length} original games · no sign-up, no tracking
+        </footer>
+      </div>
     </div>
   );
 }

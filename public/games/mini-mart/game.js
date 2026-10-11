@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import * as UI from 'flagship';
 import { sfx, tone, noise, initAudio, suspendAudio, resumeAudio } from 'sfx';
+import { makeHuman, animateHuman, SHARED_GEOMETRIES } from 'models';
 
 // ---------------------------------------------------------------------------
 // Content
@@ -161,41 +162,16 @@ function productMesh(id) {
 // ---------------------------------------------------------------------------
 // People
 // ---------------------------------------------------------------------------
-const personGeo = { body: new THREE.CapsuleGeometry(0.24, 0.42, 6, 12), head: new THREE.SphereGeometry(0.21, 16, 12), arm: new THREE.CapsuleGeometry(0.07, 0.3, 4, 8) };
-const skins = ['#ffd6b0', '#f1c27d', '#c68642', '#8d5524', '#ffdbac'];
 function makePerson(shirt, opts = {}) {
-  const g = new THREE.Group();
-  const shirtMat = mat(shirt);
-  const body = new THREE.Mesh(personGeo.body, shirtMat);
-  body.position.y = 0.52;
-  const skin = mat(opts.skin || skins[Math.floor(Math.random() * skins.length)]);
-  const head = new THREE.Mesh(personGeo.head, skin);
-  head.position.y = 1.08;
-  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.215, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(opts.hair || ['#2b2118', '#6b3e1f', '#e9c46a', '#1b1b22'][Math.floor(Math.random() * 4)]));
-  hair.position.y = 1.12;
-  const armL = new THREE.Mesh(personGeo.arm, shirtMat); armL.position.set(-0.3, 0.62, 0);
-  const armR = new THREE.Mesh(personGeo.arm, shirtMat); armR.position.set(0.3, 0.62, 0);
-  [body, head, hair, armL, armR].forEach((m) => { m.castShadow = true; g.add(m); });
-  if (opts.apron) {
-    const apron = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 0.05), mat(opts.apron));
-    apron.position.set(0, 0.5, 0.23);
-    g.add(apron);
-  }
-  if (opts.cap) {
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.08, 16), mat(opts.cap));
-    cap.position.y = 1.27;
-    const brim = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.03, 0.16), mat(opts.cap));
-    brim.position.set(0, 1.24, 0.22);
-    g.add(cap, brim);
-  }
-  g.userData = { armL, armR, body };
-  return g;
+  const h = makeHuman({ shirt, skin: opts.skin, hair: opts.hair, cap: opts.cap, apron: opts.apron, style: opts.style, scale: 1.3 });
+  h.root.userData.h = h;
+  return h.root;
 }
-function animateWalk(p, t, moving) {
-  const k = moving ? Math.sin(t * 12) : 0;
-  p.userData.armL.rotation.x = k * 0.6;
-  p.userData.armR.rotation.x = -k * 0.6;
-  p.userData.body.position.y = 0.52 + Math.abs(k) * 0.04;
+/** Walk cycle; arms go forward while carrying a stack. */
+function animateWalk(p, dt, moving, speed = 2.4, carrying = false) {
+  const h = p.userData.h;
+  animateHuman(h, dt, moving ? speed : 0);
+  if (carrying) for (const a of h.arms) a.rotation.x = -1.2;
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +201,7 @@ const LINE_X = [-1.45, 1.45, -4.35, 4.35];
 function lineX(i) { return LINE_X[i]; }
 
 function clearWorld() {
-  world.traverse((o) => { if (o.isMesh && o.geometry && !Object.values(personGeo).includes(o.geometry)) o.geometry.dispose(); });
+  world.traverse((o) => { if (o.isMesh && o.geometry && !SHARED_GEOMETRIES.has(o.geometry)) o.geometry.dispose(); });
   world.clear();
   fixtures = []; lines = []; zones = []; customers = []; staff = []; flyers = []; pileMeshes = [];
 }
@@ -624,7 +600,7 @@ function updateStaff(dt) {
       }
     }
     s.g.position.copy(s.pos);
-    animateWalk(s.g, s.tick, moving);
+    animateWalk(s.g, dt, moving, 2.6, s.carry.length > 0);
   }
 }
 const hasCashier = () => staff.some((s) => s.kind === 'cashier');
@@ -725,7 +701,7 @@ function updateCustomers(dt) {
       if (stepAlong(c, dt, 2.4)) { world.remove(c.g); c.bubble.material.map.dispose(); customers.splice(i, 1); continue; }
     }
     c.g.position.copy(c.pos);
-    animateWalk(c.g, c.tick, moving);
+    animateWalk(c.g, dt, moving, 2.2);
   }
   // the register: the player at the till, or a hired cashier, serves the queue
   const head = customers.find((c) => c.state === 'serving' && c.pos.distanceTo(queuePos(0)) < 0.2);
@@ -1181,7 +1157,7 @@ function update(dt) {
     if (worthT > 0.5) { worthT = 0; updateWorth(); }
   }
   player.position.copy(P.pos);
-  animateWalk(player, P.tick, P.moving);
+  animateWalk(player, dt, P.moving, speedNow(), P.carry.length > 0);
   // flyers
   for (let i = flyers.length - 1; i >= 0; i--) {
     const f = flyers[i];
